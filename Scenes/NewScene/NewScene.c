@@ -17,8 +17,6 @@ GOBJ* playerObject = NULL;
 Text* text;
 static Vec3 staticCamPos = {0.0f, 500.0f, 0.0f};
 
-PlayerCreateArgs *globalArgs = NULL;
-
 void minor_load() {
 OSReport("New Scene minor load\n");
 
@@ -70,32 +68,24 @@ OSReport("New Scene minor load\n");
 Item_GlobalInit();
 Player_InitFigaTreeAllocData();
 FtJObjInfoInit();
-// Preload* preload = Preload_GetTable();
-// OSReport("Address of Preload Table: %p\n", (void*)preload);
+
 PlayerData *player1 = calloc(sizeof(PlayerData));
 PlayerData *player2 = calloc(sizeof(PlayerData));
 
-CharacterKind character = CKIND_BOWSER;
-CharacterKind character2 = CKIND_BOWSER;
-FighterKind fighter = FTKIND_BOWSER;
+CharacterKind character = CKIND_ROY;
+CharacterKind character2 = CKIND_SANDBAG;
+FighterKind fighter = FTKIND_ROY;
+FighterKind fighter2 = FTKIND_SANDBAG;
 uint slot = 0;
 u8 costume = 0;
 
 player1->c_kind = character;
+player1->p_kind = 3;
 player1->scale = 1.0f;
 
 player2->c_kind = character2;
-player2->p_kind = 1;
+player2->p_kind = 3;
 player2->scale = 1.0f;
-// PlayerCreateArgs *args = calloc(sizeof(PlayerCreateArgs));
-// args->character_id = fighter;
-// args->slot = 0;
-// args->unk_idx = 0xff;
-// SetupPlayerSlot(0);
-// SetupPlayerSlot(1);
-// CameraInfo_Init(70);
-// LoadCharacterFigaTree(character);
-// SetupPlayerClass();
 
   BGM_Play(10);
 
@@ -106,61 +96,60 @@ player2->scale = 1.0f;
 	text->scale.X = 0.2f;
 	text->scale.Y = 0.2f;
   text->color.r = 0;
-  text->color.g = 0;
-  text->color.b = 0;
+  text->color.g = 100;
+  text->color.b = 200;
   Text_AddSubtext(text, -125.0f, 5.0f, "aidan walz");
 
-/////// start melee test
-// CharacterKind character = CKIND_BOWSER;
-// FighterKind fighter = FTKIND_BOWSER;
-// uint slot = 0;
-// u8 costume = 0;
+
 MatchInit *match_data = VsModeEnterData;
-OSReport("match data: %p\n", match_data);
+// OSReport("match data: %p\n", match_data);
 
 match_data->playerData[0] = *player1;
 match_data->playerData[1] = *player2;
-
-OSReport("p1: %p\n", player1);
-
+// OSReport("p1: %p\n", player1);
 
 // InitializeStartMeleeData(match_data);
 // match_data->playerData[0] = *player;
-match_data->stage = 2;
+match_data->stage = 85;
 // match_data->matchType = 1;
 
-// ListPreloadFighters();
-// ListPreloadFighters();
 Preload* preload = Preload_GetTable();
 preload->queued.stage = 7;
-preload->queued.fighters[0].kind = character;
+preload->queued.fighters[0].kind = character; // internal
 preload->queued.fighters[0].costume = costume;
+
 preload->queued.fighters[1].kind = character;
 preload->queued.fighters[1].costume = costume;
 // // OSReport("Set kind: %d, costume: %u, stage: %d\n", preload->queued.fighters[0].kind, preload->queued.fighters[0].costume, preload->queued.stage);
 Preload_Update();
-ListPreloadFighters();
 
-// StageUnk_002785c();
-// Stage_CallSetup();
-// StageUnk_ScrollZ();
-// Stages_Start_Unk(GRKINDEXT_IZUMI);
-// Stage_Fountain_Init();
-// RefractInit();
-// GOBJ* fod_gobj = Stage_Fountain_CreateGObj(GRKINDEXT_IZUMI);
-// Stage_Fountain_SetupModel(fod_gobj);
-// Player_Create(args);
-// StartMelee(match_data);
+// CameraInfo_Init(70);
+
+
+
+// StartMelee(VsModeEnterData);
 TrainingMode_Init(VsModeEnterData);
+// VictoryScreen_Init(VsModeEnterData);
+// PlayerCreateArgs *args = calloc(sizeof(PlayerCreateArgs));
+// args->character_id = fighter;
+// args->slot = 0;
+// args->unk_idx = 0xff;
+// GOBJ *player = Player_Create(args);
+
+SetupPlayerSlot(0);
+SetupPlayerSlot(1);
+
+// OSReport("Spawned ply GOBJ: %p\n", player);
 return;
 }
 
-void minor_think(PlayerCreateArgs *args) {
+void minor_think() {
   HSD_Pad* pad = PadGet(0, PADGET_ENGINE);
 
   if(pad->down & PAD_BUTTON_A) {
-    int id = Stage_GetExternalID();
-    OSReport("Stage ID: %d\n", id);
+    GOBJ *player = Fighter_GetGObj(0);
+    OSReport("Ply 0 GOBJ: %p\n", player);
+    // ListPreloadFighters();
   };
 
   // if(pad->down & PAD_BUTTON_X) {

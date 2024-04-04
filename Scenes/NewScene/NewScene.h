@@ -192,6 +192,7 @@ void* (*Stage_Fountain_SetupModel)(GOBJ *gobj) = (void *) 0x801cbe64;
 
 
 void* (*TrainingMode_Init)(MatchInit *data) = (void *) 0x8016ec28;
+void* (*VictoryScreen_Init)(MatchInit *data) = (void *) 0x80177368;
 
 
 CharacterModelInfo* (MODEL_INFO) = 0x803c0ec0;
