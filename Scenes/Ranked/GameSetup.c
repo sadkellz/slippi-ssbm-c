@@ -13,7 +13,7 @@ static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
 void minor_load(GameSetup_SceneData *minor_data) {
-  // OSReport("minor load\n");
+OSReport("minor load\n");
 
   data = calloc(sizeof(GameSetup_Data));
   data->scene_data = minor_data;
