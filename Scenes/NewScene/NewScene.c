@@ -110,7 +110,7 @@ match_data->playerData[1] = *player2;
 
 // InitializeStartMeleeData(match_data);
 // match_data->playerData[0] = *player;
-match_data->stage = 85;
+match_data->stage = 2;
 // match_data->matchType = 1;
 
 Preload* preload = Preload_GetTable();
@@ -129,15 +129,9 @@ Preload_Update();
 
 // StartMelee(VsModeEnterData);
 TrainingMode_Init(VsModeEnterData);
-// VictoryScreen_Init(VsModeEnterData);
-// PlayerCreateArgs *args = calloc(sizeof(PlayerCreateArgs));
-// args->character_id = fighter;
-// args->slot = 0;
-// args->unk_idx = 0xff;
-// GOBJ *player = Player_Create(args);
 
-SetupPlayerSlot(0);
-SetupPlayerSlot(1);
+// SetupPlayerSlot(0);
+// SetupPlayerSlot(1);
 
 // OSReport("Spawned ply GOBJ: %p\n", player);
 return;
@@ -147,17 +141,15 @@ void minor_think() {
   HSD_Pad* pad = PadGet(0, PADGET_ENGINE);
 
   if(pad->down & PAD_BUTTON_A) {
-    GOBJ *player = Fighter_GetGObj(0);
-    OSReport("Ply 0 GOBJ: %p\n", player);
-    // ListPreloadFighters();
+    SetupPlayerSlot(0);
   };
 
-  // if(pad->down & PAD_BUTTON_X) {
-  //   Vec3 *current_pos = sharedData.player_pos;
-  //   GOBJ *player = sharedData.player;
-  //   Fighter_GetECBPosition(player, current_pos);
-  //   OSReport("Current ECB Pos: x = %f, y = %f, z = %f\n", current_pos->X, current_pos->Y, current_pos->Z);
-  // }
+  if(pad->down & PAD_BUTTON_X) {
+    GOBJ *fighter = Fighter_GetGObj(0);
+    FighterData *fd = fighter->userdata;
+    Fighter_LoadAnimation(fd, fd, 30);
+    // Fighter_EnterSleep(fighter, 600);
+  }
 
   // if(pad->down & PAD_BUTTON_B) {
   // Scene_ExitMinor();
