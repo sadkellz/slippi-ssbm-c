@@ -37,6 +37,40 @@ typedef struct GameSetup_SceneData {
 } GameSetup_SceneData;
 #pragma pack()
 
+
+typedef struct GameSetup_Data {
+  int process_type;
+  int state;
+  int *steps;
+  int step_count;
+  Button *buttons[2];
+  int button_count;
+  FlatTexture *description;
+  FlatTexture *disconnect_msg;
+  TurnIndicator *turn_indicators[2];
+  GameResult **game_results;
+  int game_result_count;
+  Text *text;
+  int timer_subtext_id;
+  int timer_frames;
+  int disconnect_frames;
+  int initialized_step_type;
+  GameSetup_SceneData *scene_data;
+
+  CharPickerDialog *char_picker_dialog;
+
+  CSBoxSelector *stage_strike_selectors[STRIKE_STAGE_SELECTOR_COUNT];
+  CSBoxSelector *stage_cp_selectors[CP_STAGE_SELECTOR_COUNT];
+  CSBoxSelector *char_selectors[1];
+  CSBoxSelector *char_wait_selectors[1];
+
+  ExiSlippi_MatchState_Response *match_state;
+  ExiSlippi_FetchStep_Query *fetch_query;
+  ExiSlippi_FetchStep_Response *fetch_resp;
+  ExiSlippi_CompleteStep_Query *complete_query;
+} GameSetup_Data;
+
+
 typedef struct SharedMinorData
 {
   GOBJ *cam_gobj;
@@ -109,9 +143,13 @@ typedef struct PlayerCreateArgs {
   FighterKind character_id;
   u8 slot;
   u8 unk_idx;
-  u8 flags2;
-  u8 unk1;
+  u8 flags_b0 : 1;
+  u8 flags_b1 : 1;
 } PlayerCreateArgs;
+
+typedef struct StartMeleeData StartMeleeData, *PStartMeleeData;
+typedef struct StartMeleeRules StartMeleeRules, *PStartMeleeRules;
+typedef struct PlayerInitData PlayerInitData, *PPlayerInitData;
 
 CharacterKind (*VictoryScreen_GetResultScreenAnimation)(CharacterKind kind) = (int *) 0x80160438;
 CharacterKind (*LoadCharacterJObjDesc)(CharacterKind kind, int costume) = (int *) 0x80085820;
@@ -134,11 +172,34 @@ void* (*FtJObjInfoInit)(void) = (void *) 0x80073700;
 void* (*VictoryScreen_Think)(GOBJ *gobj) = (void *) 0x80179350;
 void* (*Item_GlobalInit)(void) = (void *) 0x80266fcc;
 void* (*HSD_CObjGetEyePosition)(COBJ *cobj,Vec3 *pos) = (void *) 0x80368784;
-void* (*Stage_FinalDestination_Init)(void) = (void *) 0x8021a740;
-
 GOBJ* (*Match_SetupPlayerVictoryPose)(CharacterKind kind,int color,uint slot) = (GOBJ *) 0x8017a67c;
-CharacterModelInfo* (MODEL_INFO) = 0x803c0ec0;
+void* (*GObj_SetJObjVisible)(GOBJ *gobj) = (void *) 0x8026bb20;
+void* (*Match_InitPlayers)(void) = (void *) 0x8016e2bc;
+void* (*InitializeStartMeleeData)(MatchInit *data) = (void *) 0x80167a64;
+void* (*StartMelee)(MatchInit *data) = (void *) 0x8016e730;
+void* (*LoadCharacterFigaTree)(CharacterKind kind) = (void *) 0x80085a14;
+void* (*Stages_Start_Unk)(int id) = (void *) 0x802251e8;
+void* (*Stage_CallSetup)(void) = (void *) 0x8022524c;
+void* (*RefractInit)(void) = (void *) 0x800222a4;
 
+
+void* (*StageUnk_002785c)(void) = (void *) 0x8002785c;
+void* (*StageUnk_ScrollZ)(void) = (void *) 0x801c20d0;
+void* (*StageUnk_DoInfoTable)(void) = (void *) 0x80225298;
+void* (*Stage_Fountain_Init)(void) = (void *) 0x801cbb88;
+GOBJ* (*Stage_Fountain_CreateGObj)(int fod) = (void *) 0x801cbce8;
+void* (*Stage_Fountain_SetupModel)(GOBJ *gobj) = (void *) 0x801cbe64;
+
+
+void* (*TrainingMode_Init)(MatchInit *data) = (void *) 0x8016ec28;
+
+
+CharacterModelInfo* (MODEL_INFO) = 0x803c0ec0;
+MatchInit* (VsModeEnterData) = 0x80480530;
+
+void load_kirby();
+
+void ListPreloadFighters();
 void CObjThink(GOBJ *gobj);
 void InputsThink(GOBJ *gobj);
 void HandleOpponentStep();
