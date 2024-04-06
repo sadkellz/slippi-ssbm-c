@@ -147,6 +147,14 @@ typedef struct PlayerCreateArgs {
   u8 flags_b1 : 1;
 } PlayerCreateArgs;
 
+typedef struct CardDoor {
+  GOBJ *gobj;
+  JOBJ *root_jobj;
+  JOBJSet *jobj_set;
+  JOBJ *door_jobj;
+} CardDoor;
+
+
 typedef struct StartMeleeData StartMeleeData, *PStartMeleeData;
 typedef struct StartMeleeRules StartMeleeRules, *PStartMeleeRules;
 typedef struct PlayerInitData PlayerInitData, *PPlayerInitData;
@@ -193,12 +201,16 @@ void* (*Stage_Fountain_SetupModel)(GOBJ *gobj) = (void *) 0x801cbe64;
 
 void* (*TrainingMode_Init)(MatchInit *data) = (void *) 0x8016ec28;
 void* (*VictoryScreen_Init)(MatchInit *data) = (void *) 0x80177368;
+void* (*VictoryScreen_Init2)(MatchInit *data) = (void *) 0x8017aa78;
+
 
 
 CharacterModelInfo* (MODEL_INFO) = 0x803c0ec0;
 MatchInit* (VsModeEnterData) = 0x80480530;
 
 void load_kirby();
+CardDoor *CardDoor_Init(GUI_GameSetup *gui);
+
 
 void ListPreloadFighters();
 void CObjThink(GOBJ *gobj);

@@ -28,4 +28,11 @@ typedef enum GUI_GameSetup_JOBJ {
   GUI_GameSetup_JOBJ_GameResult,
 } GUI_GameSetup_JOBJ;
 
+typedef enum GUI_NewScene_JOBJ {
+  GUI_NewScene_JOBJ_Cards,
+  GUI_NewScene_JOBJ_MaleWireframe,
+  GUI_NewScene_JOBJ_FemaleWireframe,
+  GUI_NewScene_JOBJ_Background
+} GUI_NewScene_JOBJ;
+
 #endif

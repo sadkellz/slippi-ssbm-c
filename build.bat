@@ -1,6 +1,6 @@
 @REM "m-ex/MexTK/MexTK.exe" -ff -i "Scenes/Ranked/GameSetup.c" "Components/CharStageBoxSelector.c" "Components/CharStageIcon.c" "Components/Button.c" "Components/FlatTexture.c" "Components/RightArrow.c" "Components/CharPickerDialog.c" "Components/StockIcon.c" "Components/GameResult.c" "Components/TurnIndicator.c" "Game/Characters.c" ^
 @REM -s mnFunction ^
-@REM -o "output/GameSetup.dat" ^
+@REM -o "C:/Users/fores/source/repos/slippi-mainline/Binary/x64/Sys/GameFiles/GALE01/GameSetup.dat" ^
 @REM -t "m-ex/MexTK/mnFunction.txt" ^
 @REM -q -ow -c -l "melee.link"
 
