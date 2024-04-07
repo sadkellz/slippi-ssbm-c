@@ -152,6 +152,8 @@ typedef struct CardDoor {
   JOBJ *root_jobj;
   JOBJSet *jobj_set;
   JOBJ *door_jobj;
+  GOBJ *counter;
+  int frame;
 } CardDoor;
 
 

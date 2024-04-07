@@ -1,15 +1,17 @@
 #include "NewScene.h"
 #include "Fighter.h"
 #include "stage.h"
+#include "../../Common.h"
 #include "../../Files.h"
 
 static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
 // static GameSetup_Data *data;
-SharedMinorData sharedData;
-GOBJ* playerObject = NULL;
+
+GOBJ *_counter = NULL;
+JOBJ *_door_jobj = NULL;
 Text* text;
-static Vec3 staticCamPos = {0.0f, 500.0f, 0.0f};
+
 
 void minor_load() {
 OSReport("New Scene minor load\n");
@@ -36,9 +38,6 @@ OSReport("New Scene minor load\n");
   void **stc_cam_cobj = (R13 + (-0x4ADC));
   *stc_cam_cobj = gui_assets->cobjs[0];
 
-  sharedData.cam_gobj = cam_gobj;
-  sharedData.cam_cobj = cam_cobj;
-
   // create fog
   GOBJ *fog_gobj = GObj_Create(14, 2, 0);
   HSD_Fog *fog = Fog_LoadDesc(gui_assets->fog[0]);
@@ -53,15 +52,6 @@ OSReport("New Scene minor load\n");
 
   // create background
   JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_Background], 0, 0, 3, 1, 1, GObj_Anim);
-
-  // Load panel and frame
-  // GOBJ *cards_gobj = JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_Cards], 11, 0, 3, 1, 1, GObj_Anim);
-  // JOBJ *cards_root_jobj = cards_gobj->hsd_object;
-  // JOBJ *Door1 = cards_root_jobj->child->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling;
-  // HSD_Material *door_mat = Door1->dobj->mobj->mat;
-  // door_mat->alpha = 0;
-  // JOBJ_ReqAnimAll(Door1, 0);
-  // JOBJ_AnimAll(cards_root_jobj);
 
   CardDoor_Init(gui_assets);
 
@@ -124,8 +114,6 @@ Preload_Update();
 
 // SetupPlayerSlot(0);
 // SetupPlayerSlot(1);
-
-// OSReport("Spawned ply GOBJ: %p\n", player);
 return;
 }
 
@@ -186,35 +174,54 @@ static JOBJ *GetNthSibling(JOBJ *start, int n) {
     return start;
 }
 
+void FreeCounter(void *ptr) {
+    _counter = NULL;
+    if (ptr) HSD_Free(ptr);
+}
+
+static void StopDoorAnim(CardDoor *cd){
+  int frame = cd->frame + 1;
+  cd->frame = frame;
+  if (frame == 30) {
+    JOBJ_RemoveAnimAll(_door_jobj);
+    GObj_Destroy(_counter);
+    GObj_RemoveProc(_counter);
+    _counter = NULL;
+  }
+}
+
+
 static void _SetDisplayState(CardDoor *cd) {
-  JOBJ *targetSibling = GetNthSibling(cd->root_jobj->child, 0);
-  HSD_Material *cd_mat = targetSibling->child->child->sibling->child->dobj->mobj->mat;
-  // HSD_Material *cd_mat = cd->root_jobj->child->sibling->sibling->sibling->sibling->
-  // sibling->sibling->sibling->sibling->sibling->sibling->sibling->child->child->sibling->child->dobj->mobj->mat;
-
-  // HSD_Material *small_arrow_mat = ti->root_jobj->child->sibling->dobj->mobj->mat;
-
-  // Reset the colors of the background. Is there a way to reset to the file configuration?
-  // cd_mat->diffuse = (GXColor){255, 255, 0, 128};
-  
-  cd->door_jobj = targetSibling;
-  JOBJ_RemoveAnimAll(cd->root_jobj);
-  
-  // JOBJ_AddAnimAll(cd->root_jobj, cd->jobj_set->animjoint, cd->jobj_set->matanimjoint, cd->jobj_set->shapeaninjoint);
-  // JOBJ_AnimAll(cd->root_jobj);
+  // JOBJ_RemoveAnimAll(cd->root_jobj);
   JOBJ_AddSetAnim(cd->root_jobj, cd->jobj_set, 0);
-  JOBJ_ReqAnimAll(cd->door_jobj, 0);
 
+  // JOBJ_ReqAnim(cd->root_jobj, 30);
+  // JOBJ_Anim(cd->root_jobj);
+  // JOBJ_ForEachAnim(cd->root_jobj, 0x6, 0x400, AOBJ_ReqAnim, 1, 0.0);
+  // JOBJ_Anim(cd->root_jobj);
+  // JOBJ_AnimAll(cd->root_jobj);
+  // JOBJ_PauseOnFrame(cd->root_jobj, 1, 0x400, 30)
+  // JOBJ_ForEachAnim(cd->root_jobj, 0x6, 0xffff, AOBJ_StopAnim, 6, 0, 0);
+  JOBJ_ReqAnimAll(cd->door_jobj, 0);
 }
 
 CardDoor *CardDoor_Init(GUI_GameSetup *gui) {
-  CardDoor *cd = calloc(sizeof(CardDoor));
+CardDoor *cd = calloc(sizeof(CardDoor));
 
-  // Init ti jobj
+  // Init cd jobj
   cd->jobj_set = gui->jobjs[GUI_NewScene_JOBJ_Cards];
   cd->gobj = JOBJ_LoadSet(0, cd->jobj_set, 0, 0, 3, 1, 1, GObj_Anim);
   cd->root_jobj = cd->gobj->hsd_object;
-  // cd->root_jobj = cd->root_jobj->child->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling->sibling;
+  cd->frame = 0;
+  GOBJ *gobj = GObj_Create(0x4, 0xf, 0);
+  _counter = gobj;
+
+  JOBJ *targetSibling = GetNthSibling(cd->root_jobj->child, 0);
+  cd->door_jobj = targetSibling;
+  _door_jobj = cd->door_jobj;
+  OSReport("JOBJ1: %p\n", _door_jobj);
+  GObj_AddUserData(gobj, 4, FreeCounter, NULL);
+  GObj_AddProc(gobj, StopDoorAnim, 6);
   // Init state
   _SetDisplayState(cd);
 
