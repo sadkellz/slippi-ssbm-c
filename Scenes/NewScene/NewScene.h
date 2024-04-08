@@ -9,6 +9,9 @@
 #include "../../ExiSlippi.h"
 #include "../../../Common.h"
 
+#include "../../Components/CardDoor.h"
+
+
 // How to auto-format code: https://stackoverflow.com/a/50489812/1249024
 
 #define STRIKE_STAGE_SELECTOR_COUNT 5
@@ -38,37 +41,9 @@ typedef struct GameSetup_SceneData {
 #pragma pack()
 
 
-typedef struct GameSetup_Data {
-  int process_type;
-  int state;
-  int *steps;
-  int step_count;
-  Button *buttons[2];
-  int button_count;
-  FlatTexture *description;
-  FlatTexture *disconnect_msg;
-  TurnIndicator *turn_indicators[2];
-  GameResult **game_results;
-  int game_result_count;
-  Text *text;
-  int timer_subtext_id;
-  int timer_frames;
-  int disconnect_frames;
-  int initialized_step_type;
-  GameSetup_SceneData *scene_data;
-
-  CharPickerDialog *char_picker_dialog;
-
-  CSBoxSelector *stage_strike_selectors[STRIKE_STAGE_SELECTOR_COUNT];
-  CSBoxSelector *stage_cp_selectors[CP_STAGE_SELECTOR_COUNT];
-  CSBoxSelector *char_selectors[1];
-  CSBoxSelector *char_wait_selectors[1];
-
-  ExiSlippi_MatchState_Response *match_state;
-  ExiSlippi_FetchStep_Query *fetch_query;
-  ExiSlippi_FetchStep_Response *fetch_resp;
-  ExiSlippi_CompleteStep_Query *complete_query;
-} GameSetup_Data;
+typedef struct TurnsSetup_Data {
+  CardDoor *cd;
+} TurnsSetup_Data;
 
 
 typedef struct SharedMinorData
@@ -147,14 +122,12 @@ typedef struct PlayerCreateArgs {
   u8 flags_b1 : 1;
 } PlayerCreateArgs;
 
-typedef struct CardDoor {
+typedef struct CardFace {
   GOBJ *gobj;
   JOBJ *root_jobj;
   JOBJSet *jobj_set;
-  JOBJ *door_jobj;
-  GOBJ *counter;
   int frame;
-} CardDoor;
+} CardFace;
 
 
 typedef struct StartMeleeData StartMeleeData, *PStartMeleeData;
@@ -211,8 +184,7 @@ CharacterModelInfo* (MODEL_INFO) = 0x803c0ec0;
 MatchInit* (VsModeEnterData) = 0x80480530;
 
 void load_kirby();
-CardDoor *CardDoor_Init(GUI_GameSetup *gui);
-
+void HandleCardInputs();
 
 void ListPreloadFighters();
 void CObjThink(GOBJ *gobj);
