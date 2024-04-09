@@ -66,6 +66,8 @@ CardDoor *CardDoor_Init(GUI_GameSetup *gui);
 CardFace *CardFace_Init(GUI_GameSetup *gui);
 
 void* (*HSD_AObjSetEndFrame)(float frame, AOBJ *aobj) = (void *) 0x8036532c;
+void* (*HSD_TObjAnimAll)(TOBJ *tobj) = (void *) 0x8035eba0;
+void* (*HSD_DObjReqAnimAll)(float unk, DOBJ *dobj) = (void *) 0x8035dfd8;
 void* (*HSD_JObjWalkTree)(JOBJ *jobj, void *cb, void *args) = (void *) 0x8036f0f0;
 
 
