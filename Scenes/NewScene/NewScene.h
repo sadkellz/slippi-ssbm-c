@@ -43,6 +43,7 @@ typedef struct GameSetup_SceneData {
 
 typedef struct TurnsSetup_Data {
   CardDoor *cd;
+  CardFace *fd;
 } TurnsSetup_Data;
 
 
@@ -121,14 +122,6 @@ typedef struct PlayerCreateArgs {
   u8 flags_b0 : 1;
   u8 flags_b1 : 1;
 } PlayerCreateArgs;
-
-typedef struct CardFace {
-  GOBJ *gobj;
-  JOBJ *root_jobj;
-  JOBJSet *jobj_set;
-  int frame;
-} CardFace;
-
 
 typedef struct StartMeleeData StartMeleeData, *PStartMeleeData;
 typedef struct StartMeleeRules StartMeleeRules, *PStartMeleeRules;

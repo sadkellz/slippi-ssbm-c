@@ -51,12 +51,15 @@ OSReport("New Scene minor load\n");
 	GObj_AddGXLink(light_gobj, GXLink_LObj, 0, 128);
 
 	// create background
-	// JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_Background], 0, 0, 3, 1, 1, GObj_Anim);
+	// JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_Face], 0, 0, 3, 1, 1, GObj_Anim);
 
 	// data->cd = CardDoor_Init(gui_assets);
 	data = calloc(sizeof(TurnsSetup_Data));
 	CardDoor *cd = CardDoor_Init(gui_assets);
+	CardFace *fd = CardFace_Init(gui_assets);
+
 	data->cd = cd;
+	data->fd = fd;
 	
 	BGM_Play(10);
 
@@ -206,11 +209,13 @@ void HandleCardInputs() {
   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
   u64 downInputs = Pad_GetDown(port);
   CardDoor *cd = data->cd;
+  CardFace *fd = data->fd;
   JOBJ *door = cd->door_jobjs[cd->door_index];
 
 	if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
 		if (cd->door_index < 3) {
 			cd->door_index++;
+			fd->face_index++;
 			// DoorStateChange(cd, cd->door_index);
 			SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
 		}
@@ -218,6 +223,7 @@ void HandleCardInputs() {
 	} else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
 		if (cd->door_index > 0) {
 			cd->door_index--;
+			fd->face_index--;
 			SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
 		}
 
