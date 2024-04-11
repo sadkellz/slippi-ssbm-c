@@ -51,7 +51,8 @@ OSReport("New Scene minor load\n");
 	GObj_AddGXLink(light_gobj, GXLink_LObj, 0, 128);
 
 	// create background
-	// JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_Face], 0, 0, 3, 1, 1, GObj_Anim);
+	JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_Background], 0, 0, 3, 1, 1, GObj_Anim);
+	JOBJ_LoadSet(0, gui_assets->jobjs[GUI_NewScene_JOBJ_MenuTop], 0, 0, 3, 1, 1, GObj_Anim);
 
 	// data->cd = CardDoor_Init(gui_assets);
 	data = calloc(sizeof(TurnsSetup_Data));
@@ -72,7 +73,7 @@ OSReport("New Scene minor load\n");
 	text->color.r = 0;
 	text->color.g = 100;
 	text->color.b = 200;
-	Text_AddSubtext(text, -125.0f, 5.0f, "hi");
+	Text_AddSubtext(text, -125.0f, 5.0f, "hello");
 
 	//////////////////////////////////
 	Item_GlobalInit();

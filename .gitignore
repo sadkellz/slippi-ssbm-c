@@ -4,7 +4,12 @@ vanilla-melee/fix-ssm.mp4
 install.bat
 output/*
 build/*
-
+MexFileSystem/*
+FileSystem/*
+WorkingFiles/*
+MWireFrame/FalconSpecials
+Akaneia Builder/*
+.iso
 # ignore output files
 *.d
 *.o

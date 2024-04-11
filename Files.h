@@ -31,6 +31,7 @@ typedef enum GUI_GameSetup_JOBJ {
 typedef enum GUI_NewScene_JOBJ {
   GUI_NewScene_JOBJ_Doors,
   GUI_NewScene_JOBJ_Face,
+  GUI_NewScene_JOBJ_MenuTop,
   GUI_NewScene_JOBJ_Background
 } GUI_NewScene_JOBJ;
 

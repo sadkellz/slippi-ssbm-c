@@ -18,13 +18,6 @@ typedef enum CardDoor_Door {
   DOOR_COUNT,
 } CardDoor_Door;
 
-typedef struct CardDoor_Transforms {
-  Vec3 default_pos;
-  Vec4 default_rot;
-  Vec3 current_pos;
-  Vec4 current_rot;
-} CardDoor_Transforms;
-
 typedef struct CardDoor {
   GOBJ *gobj;
   JOBJ *root_jobj;
@@ -32,7 +25,6 @@ typedef struct CardDoor {
   JOBJ *door_jobjs[4];
   int door_index;
   CardDoor_State state[4];
-  CardDoor_Transforms transforms[4];
 } CardDoor;
 
 typedef enum CardFace_Face {

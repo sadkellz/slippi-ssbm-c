@@ -45,7 +45,6 @@ static void HandleDoorState(GOBJ *gobj) {
 	int door_idx = cd->door_index;
 	JOBJ* curr_door = cd->door_jobjs[door_idx];
 	CardDoor_State state = cd->state[door_idx];
-	CardDoor_Transforms transforms = cd->transforms[door_idx];
 	
 	if (state == CardDoor_State_CLOSED) {
 		JOBJ_ForEachAnim(curr_door, 6, 0x400, AOBJ_ReqAnim, 1, 0);
@@ -70,12 +69,6 @@ CardDoor *CardDoor_Init(GUI_GameSetup *gui) {
     for (int i = DOOR_ONE; i < DOOR_COUNT; i++) {
         JOBJ *target_sibling = GetNthSibling(cd->root_jobj->child, i);
         cd->door_jobjs[i] = target_sibling;
-
-		Vec3 pos = cd->door_jobjs[i]->trans;
-		Vec4 rot = cd->door_jobjs[i]->rot;
-
-		cd->transforms[i].default_pos = pos;
-		cd->transforms[i].default_rot = rot;
     }
 
 	JOBJ_AddSetAnim(cd->root_jobj, cd->jobj_set, 0);
