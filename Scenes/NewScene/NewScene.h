@@ -153,11 +153,13 @@ void* (*GObj_SetJObjVisible)(GOBJ *gobj) = (void *) 0x8026bb20;
 void* (*Match_InitPlayers)(void) = (void *) 0x8016e2bc;
 void* (*InitializeStartMeleeData)(MatchInit *data) = (void *) 0x80167a64;
 void* (*StartMelee)(MatchInit *data) = (void *) 0x8016e730;
+void* (*VsMode_Enter)(MatchInit *data) = (void *) 0x8016e934;
 void* (*LoadCharacterFigaTree)(CharacterKind kind) = (void *) 0x80085a14;
 void* (*Stages_Start_Unk)(int id) = (void *) 0x802251e8;
 void* (*Stage_CallSetup)(void) = (void *) 0x8022524c;
 void* (*RefractInit)(void) = (void *) 0x800222a4;
 
+bool* (*Archive_CheckPreloadAndGetSymbols)(HSD_Archive **out, char *path,...) = (void *) 0x80017040;
 
 void* (*StageUnk_002785c)(void) = (void *) 0x8002785c;
 void* (*StageUnk_ScrollZ)(void) = (void *) 0x801c20d0;
@@ -172,16 +174,60 @@ void* (*VictoryScreen_Init)(MatchInit *data) = (void *) 0x80177368;
 void* (*VictoryScreen_Init2)(MatchInit *data) = (void *) 0x8017aa78;
 
 
+// COBJ FUNCTIONS
+void* (*CObjGetEyePosition)(COBJ *cobj, Vec3 *pos) = (void*) 0x80368784;
+void* (*CObjGetInterest)(COBJ *cobj, Vec3 *pos) = (void*) 0x803686ac;
+void* (*CObjGetEyeVector)(COBJ *cobj, Vec3 *out) = (void*) 0x8036885c;
+float* (*CObjGetEyeDistance)(COBJ *cobj) = (void*) 0x80368a08;
+float* (*CObjGetLeftVector)(COBJ *cobj, Vec3 *out) = (void*) 0x803692e8;
+float* (*CObjGetUpVector)(COBJ *cobj, Vec3 *out) = (void*) 0x80368e70;
+
+
+// GX FUNCTIONS
+#define GX_FIFO 0xcc008000
+void* (*DrawQuad)(Vec3 *corner1, Vec3 *corner2, GXColor *color) = (void*) 0x80009dd4;
+void* (*Setup2DDrawing)( float scale_x, float scale_y, int line_width) = (void*) 0x80391a04;
+void* (*DrawStagePoints)( short *type, int param, u8 *color) = (void*) 0x80059fe0;
+void* (*SetDrawColor)(u8 *color) = (void*) 0x80058acc;
+void* (*HSD_LObjSetupInit)(COBJ *cobj) = (void*) 0x80365f28;
+void* (*StateSetPointSize)(byte param_1,int param_2) = (void*) 0x80361c60;
+
+
+
+// DEBUG FUNCTIONS
+void* (*DevelopCam_UpdateTransforms)(GOBJ *text, int port) = (void*) 0x80227904;
+void* (*DevelopCam_OrbitCam)(float cstick_x, float cstick_y, GOBJ *CameraGObj,Vec3 *CameraPosition, Vec3 *CameraInterest) = (void*) 0x80227b64;
+
+GOBJ* (*Camera_LoadCameraEntity)(void) = (void*) 0x80030a50;
+void* (*CObjSetInterest)(COBJ *cobj, Vec3 *pos) = (void*) 0x80368718;
+
+void* (*DevelopMode_SceneUpdate)(int *cb) = (void*) 0x801a4970;
+byte* (*GetCurrentRenderPass)(void) = (void*) 0x80375530;
+
+// MATH FUNCTIONS
+float (*tan)(float x) = (void*) 0x803261bc;
+float (*tanf)(float x) = (void*) 0x8000cee0;
+void* (*HSD_MtxInverse)(Mtx *in, Mtx *inverse) = (void*) 0x80379310;
+void* (*VectorRotate)(Vec3 *v, int axis, float *angle) = (void*) 0x8000db00;
+
 
 CharacterModelInfo* (MODEL_INFO) = 0x803c0ec0;
 MatchInit* (VsModeEnterData) = 0x80480530;
 
 void load_kirby();
 void HandleCardInputs();
+int CountTeam();
+void store_except(int except[], int slot);
+
+void extract_frustum_near(float fov, float aspect, float near, float far, Vec3 *position, Vec3 *forward, Vec3 *up, Vec3* vertices);
+void drawCubeWithNormals();
+void extract_frustum_far(float fov, float aspect, float near, float far, Vec3 *position, Vec3 *forward, Vec3 *up, Vec3* vertices);
 
 void ListPreloadFighters();
 void CObjThink(GOBJ *gobj);
 void InputsThink(GOBJ *gobj);
+void drawing_think(GOBJ *gobj);
+void create_drawing(GOBJ *gobj);
 void HandleOpponentStep();
 void InitAllSelectorJobjs();
 void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count);
