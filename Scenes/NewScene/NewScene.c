@@ -371,7 +371,7 @@ void create_drawing(GOBJ *gobj) {
 	COBJ_GetViewingMtx(cobj, &mtx);
 	GXSetCurrentMtx(0);
 	GXLoadPosMtxImm(mtx, 0);
-	GXSetZMode(0, 0, 0);
+	GXSetZMode(1, 3, 1);
 	GXSetLineWidth(0x10, 0);
 	StateSetPointSize(0xFF, 0);
 	
