@@ -325,6 +325,37 @@ void minor_exit() {
 //     }
 // }
 
+static inline void normalToColor(f32 NX, f32 NY, f32 NZ, u8 *r, u8 *g, u8 *b) {
+    f32 length = sqrtf(NX * NX + NY * NY + NZ * NZ);
+    NX /= length;
+    NY /= length;
+    NZ /= length;
+
+    *r = (u8)((NX + 1.0f) * 127.5f);
+    *g = (u8)((NY + 1.0f) * 127.5f);
+    *b = (u8)((NZ + 1.0f) * 127.5f);
+}
+
+// Function to calculate vertex normal
+static void calculateNormal(Vec3 v1, Vec3 v2, Vec3 v3, f32 *NX, f32 *NY, f32 *NZ) {
+    f32 Ux = v2.X - v1.X;
+    f32 Uy = v2.Y - v1.Y;
+    f32 Uz = v2.Z - v1.Z;
+
+    f32 Vx = v3.X - v1.X;
+    f32 Vy = v3.Y - v1.Y;
+    f32 Vz = v3.Z - v1.Z;
+
+    *NX = Uy * Vz - Uz * Vy;
+    *NY = Uz * Vx - Ux * Vz;
+    *NZ = Ux * Vy - Uy * Vx;
+
+    f32 length = sqrtf((*NX) * (*NX) + (*NY) * (*NY) + (*NZ) * (*NZ));
+    *NX /= length;
+    *NY /= length;
+    *NZ /= length;
+}
+
 void create_drawing(GOBJ *gobj) {
 	Mtx mtx;
 	GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
@@ -422,6 +453,55 @@ void create_drawing(GOBJ *gobj) {
 	// GXPosition3f32(far_plane[0].X, far_plane[0].Y, far_plane[0].Z);
 	// GXColor3u8( 0x44, 0x44, 0xff );
 
+    GXClearVtxDesc();
+    GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGB, GX_RGB8, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetLineWidth(0x10, 0);
+
+    u8 r, g, b;
+    f32 NX, NY, NZ;
+
+    // Drawing near plane quad (normal pointing towards the viewer)
+    calculateNormal(near_plane[0], near_plane[1], near_plane[2], &NX, &NY, &NZ);
+    normalToColor(NX, NY, NZ, &r, &g, &b);
+    GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+    for (int i = 0; i < 4; ++i) {
+        GXPosition3f32(near_plane[i].X, near_plane[i].Y, near_plane[i].Z);
+        GXColor3u8(r, g, b);
+    }
+
+    // Drawing far plane quad (normal pointing away from the viewer)
+    calculateNormal(far_plane[0], far_plane[1], far_plane[2], &NX, &NY, &NZ);
+    normalToColor(NX, NY, NZ, &r, &g, &b);
+    GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+    for (int i = 0; i < 4; ++i) {
+        GXPosition3f32(far_plane[i].X, far_plane[i].Y, far_plane[i].Z);
+        GXColor3u8(r, g, b);
+    }
+
+    // Drawing connecting quads between near and far planes
+    for (int i = 0; i < 4; ++i) {
+        int next = (i + 1) % 4;
+        GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+
+        // Calculate normals for each quad
+        calculateNormal(near_plane[i], near_plane[next], far_plane[next], &NX, &NY, &NZ);
+        normalToColor(NX, NY, NZ, &r, &g, &b);
+
+        GXPosition3f32(near_plane[i].X, near_plane[i].Y, near_plane[i].Z);
+        GXColor3u8(r, g, b);
+
+        GXPosition3f32(near_plane[next].X, near_plane[next].Y, near_plane[next].Z);
+        GXColor3u8(r, g, b);
+
+        GXPosition3f32(far_plane[next].X, far_plane[next].Y, far_plane[next].Z);
+        GXColor3u8(r, g, b);
+
+        GXPosition3f32(far_plane[i].X, far_plane[i].Y, far_plane[i].Z);
+        GXColor3u8(r, g, b);
+    }
 
 }
 
