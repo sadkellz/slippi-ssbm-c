@@ -123,6 +123,25 @@ typedef struct PlayerCreateArgs {
   u8 flags_b1 : 1;
 } PlayerCreateArgs;
 
+typedef struct DynamicModelDesc {
+  JOBJ * joint;
+  void ** anim_joint;
+  void ** matanims;
+  void ** shapeanims;
+} DynamicModelDesc;
+
+typedef struct SceneDesc {
+  GUI_GameSetup ** models;
+  COBJDesc ** cameras;
+  LObjDesc ** lights;
+  HSD_FogDesc ** fogs;
+} SceneDesc;
+
+typedef struct PIPData {
+  _HSD_ImageDesc *image;
+} PIPData;
+
+
 typedef struct StartMeleeData StartMeleeData, *PStartMeleeData;
 typedef struct StartMeleeRules StartMeleeRules, *PStartMeleeRules;
 typedef struct PlayerInitData PlayerInitData, *PPlayerInitData;
@@ -181,6 +200,9 @@ void* (*CObjGetEyeVector)(COBJ *cobj, Vec3 *out) = (void*) 0x8036885c;
 float* (*CObjGetEyeDistance)(COBJ *cobj) = (void*) 0x80368a08;
 float* (*CObjGetLeftVector)(COBJ *cobj, Vec3 *out) = (void*) 0x803692e8;
 float* (*CObjGetUpVector)(COBJ *cobj, Vec3 *out) = (void*) 0x80368e70;
+float* (*CObj_UpdateFromCamera)(GOBJ *gobj) = (void*) 0x8002a4ac;
+float* (*CopyCObjFromMainCamera)(GOBJ *gobj) = (void*) 0x8021eb10;
+
 
 
 // GX FUNCTIONS
@@ -191,6 +213,7 @@ void* (*DrawStagePoints)( short *type, int param, u8 *color) = (void*) 0x80059fe
 void* (*SetDrawColor)(u8 *color) = (void*) 0x80058acc;
 void* (*HSD_LObjSetupInit)(COBJ *cobj) = (void*) 0x80365f28;
 void* (*StateSetPointSize)(byte param_1,int param_2) = (void*) 0x80361c60;
+void* (*VictoryScreen_RenderTargetCam)(int slot) = (void*) 0x8017a318;
 
 
 
@@ -222,6 +245,8 @@ void store_except(int except[], int slot);
 void extract_frustum_near(float fov, float aspect, float near, float far, Vec3 *position, Vec3 *forward, Vec3 *up, Vec3* vertices);
 void drawCubeWithNormals();
 void extract_frustum_far(float fov, float aspect, float near, float far, Vec3 *position, Vec3 *forward, Vec3 *up, Vec3* vertices);
+GOBJ* CreateCamera();
+void UpdateRenderTarget();
 
 void ListPreloadFighters();
 void CObjThink(GOBJ *gobj);

@@ -9,14 +9,17 @@
 static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
 static TurnsSetup_Data *data;
+static PIPData *pip_data;
 
 Text* text;
 DevText* devtext;
 COBJ* cam_cobj;
 GOBJ* cam_gobj;
 
-GOBJ* DrawingGObj;
+GOBJ* RenderTargetCam;
 
+GOBJ* DrawingGObj;
+static HSD_Archive *results_archive;
 
 u8 red[4] = {255, 0, 0, 255};
 u8 green[4] = {0, 255, 0, 255};
@@ -24,7 +27,14 @@ u8 blue[4] = {0, 0, 255, 255};
 
 GXColor purple = {0, 0, 255, 255};
 
+GUI_GameSetup* results_pnl;
 
+static JOBJ *GetNthSibling(JOBJ *start, int n) {
+    while (start != NULL && n-- > 0) {
+        start = start->sibling;
+    }
+    return start;
+}
 
 void minor_load() {
 OSReport("New Scene minor load\n");
@@ -32,9 +42,63 @@ OSReport("New Scene minor load\n");
 	// // Set up input handler. Initialize at top to make sure it runs before anything else
 	// GOBJ *input_handler_gobj = GObj_Create(4, 0, 128);
 	// GObj_AddProc(input_handler_gobj, InputsThink, 0);
-	DrawingGObj = GObj_Create(0x11, 24, 0);
-	GObj_AddProc(DrawingGObj, drawing_think, 0);
-	GObj_AddGXLink(DrawingGObj, create_drawing, 0x0, 128);
+
+	GOBJ *rst_gobj = GObj_Create(14, 15, 0);
+
+	// Load results
+	results_archive = Archive_LoadFile("GmRst.usd");
+	results_pnl = Archive_GetPublicAddress(results_archive, "pnlsce");
+	JOBJ* root_joint = JOBJ_LoadJoint(results_pnl->jobjs[0]->jobj);
+	OSReport("root_joint: %p\n", root_joint);
+
+	// Add GX link to render target
+	GObj_AddObject(rst_gobj, 0x3, root_joint);
+	GObj_AddGXLink(rst_gobj, (void *)0x80175038, 11, 0);
+	JOBJ_SetFlagsAll(root_joint, JOBJ_HIDDEN);
+
+
+	JOBJ* GX_JOBJ = GetNthSibling(root_joint->child, 17);
+	OSReport("GX_JOBJ: %p\n", GX_JOBJ);
+	// Unhide only the GX_JOBJ
+	JOBJ_ClearFlagsAll(GX_JOBJ->child, JOBJ_HIDDEN);
+	// Hide insignia graphic
+	DOBJ* GX_DOBJ = GX_JOBJ->child->dobj;
+	OSReport("GX_DOBJ: %p\n", GX_DOBJ);
+	DOBJ_SetFlags(GX_DOBJ, DOBJ_HIDDEN);
+
+	OSReport("test: %p\n", GX_JOBJ);
+	JOBJ_ReqAnim(root_joint, 0);
+	JOBJ_ReqAnimAll(root_joint, 0);
+	JOBJ_AnimAll(root_joint);
+	// center the GX_JOBJ
+	GX_JOBJ->child->trans.X = 0.0f;
+	GX_JOBJ->child->trans.Y = 7.0f;
+	GX_JOBJ->child->trans.Z = 50.0f;
+	GX_JOBJ->child->scale.X = 1.0f;
+	GX_JOBJ->child->scale.Y = 1.0f;
+	GX_JOBJ->child->scale.Z = 1.0f;
+	
+	DOBJ* GX_FRAME = GX_JOBJ->child->dobj->next->next;
+	DOBJ* GX_MAIN = GX_JOBJ->child->dobj->next;
+
+
+
+
+	pip_data = calloc(52);
+	_HSD_ImageDesc* GX_IMAGE = GX_MAIN->mobj->tobj->imagedesc;
+	pip_data->image = GX_IMAGE;
+	GX_AllocImageData(GX_IMAGE->img_ptr, 64, 80, 5, 2559);
+	
+
+
+
+
+
+	// create lights
+	// GOBJ *light_gobj = GObj_Create(3, 4, 128);
+	// LOBJ *lobj = LObj_LoadAll(results_pnl->lights);
+	// GObj_AddObject(light_gobj, 2, lobj);
+	// GObj_AddGXLink(light_gobj, GXLink_LObj, 0, 128);
 
 	// Load file
 	// gui_archive = Archive_LoadFile("CustomSceneGUI2.dat");
@@ -163,167 +227,100 @@ OSReport("New Scene minor load\n");
 
 	// SetupPlayerSlot(0);
 	// SetupPlayerSlot(1);
+	CreateCamera();
 	return;
 }
 
 void minor_think() {
-	// DevelopMode_SceneUpdate((int *) 0x80479d6c);
-	// OSReport("Test\n");
-	// HSD_Pad* pad = PadGet(0, PADGET_ENGINE);
-	// GOBJ* text_gobj = DevelopText_GetGObj();
-	// // Vec3 cam_pos = {0.0f, 0.0f, 0.0f};
-	// // CObjGetEyePosition(cam_cobj, &cam_pos);
-	GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
-	COBJ* MainCameraCObj = MainCameraGObj->hsd_object;
-	CObj_SetCurrent(MainCameraCObj);
+	HSD_Pad* pad = PadGet(0, PADGET_ENGINE);
 
-	Vec3 interest = MainCameraCObj->interest->pos;
-	float aspect = MainCameraCObj->projection_param.perspective.aspect;
-	float fov = MainCameraCObj->projection_param.perspective.fov;
-	float print_fov = fov * (M_PI / 180.0f);
-	// float near = 1.0f;
-	// float far = 1000.0f;
-	Vec3 forward;
-	Vec3 up;
-	Vec3 left;
-	Vec3 pos;
+	// GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
+	// COBJ* MainCameraCObj = MainCameraGObj->hsd_object;
+	// CObj_SetCurrent(MainCameraCObj);
 
-	CObjGetEyeVector(MainCameraCObj, &forward);
-	CObjGetUpVector(MainCameraCObj, &up);
-	CObjGetLeftVector(MainCameraCObj, &left);
-	CObjGetEyePosition(MainCameraCObj, &pos);
+	// Vec3 interest = MainCameraCObj->interest->pos;
+	// float aspect = MainCameraCObj->projection_param.perspective.aspect;
+	// float fov = MainCameraCObj->projection_param.perspective.fov;
+	// float print_fov = fov * (M_PI / 180.0f);
+	// // float near = 1.0f;
+	// // float far = 1000.0f;
+	// Vec3 forward;
+	// Vec3 up;
+	// Vec3 left;
+	// Vec3 pos;
 
-	float pitch = atan2(forward.Y, -forward.Z);
-	float yaw = atan2(-forward.X, -forward.Z);
+	// CObjGetEyeVector(MainCameraCObj, &forward);
+	// CObjGetUpVector(MainCameraCObj, &up);
+	// CObjGetLeftVector(MainCameraCObj, &left);
+	// CObjGetEyePosition(MainCameraCObj, &pos);
+
+	// float pitch = atan2(forward.Y, -forward.Z);
+	// float yaw = atan2(-forward.X, -forward.Z);
 	
-	// Vec3 verts[4];
-	// extract_frustum_near(fov, aspect, 100.0f, 10000.0f, &pos, &forward, &up, verts);
-
-	// DrawStagePoints(type, 4, red);
-	// DrawQuad(&corner1, &corner2, purple);
-	// if (pad->substickX || pad->substickY) {
-	// 	interest.X += pad->substickX;
-	// 	interest.Y += pad->substickY;
-	// 	CObjSetInterest(MainCameraCObj, &interest);
-
-		// DevelopCam_OrbitCam(pad->substickX, pad->substickY, MainCameraGObj, &MainCameraCObj->eye_position->pos, &MainCameraCObj->interest->pos);
-		DevelopText_EraseAllText(devtext);
+	// 	DevelopText_EraseAllText(devtext);
 	
-		DevelopText_SetCursorXY(devtext, 0, 0);
-		DevelopText_AddString(devtext, "Pos: ");
-		DevelopText_SetCursorXY(devtext, 20, 0);
-		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-	 	MainCameraCObj->eye_position->pos.X, MainCameraCObj->eye_position->pos.Y, MainCameraCObj->eye_position->pos.Z);
+	// 	DevelopText_SetCursorXY(devtext, 0, 0);
+	// 	DevelopText_AddString(devtext, "Pos: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 0);
+	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	//  	MainCameraCObj->eye_position->pos.X, MainCameraCObj->eye_position->pos.Y, MainCameraCObj->eye_position->pos.Z);
 	
-		DevelopText_SetCursorXY(devtext, 0, 1);
-		DevelopText_AddString(devtext, "Interest: ");
-		DevelopText_SetCursorXY(devtext, 20, 1);
-		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-		MainCameraCObj->interest->pos.X, MainCameraCObj->interest->pos.Y, MainCameraCObj->interest->pos.Z);
+	// 	DevelopText_SetCursorXY(devtext, 0, 1);
+	// 	DevelopText_AddString(devtext, "Interest: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 1);
+	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	// 	MainCameraCObj->interest->pos.X, MainCameraCObj->interest->pos.Y, MainCameraCObj->interest->pos.Z);
 
-		DevelopText_SetCursorXY(devtext, 0, 2);
-		DevelopText_AddString(devtext, "Forward: ");
-		DevelopText_SetCursorXY(devtext, 20, 2);
-		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-		forward.X, forward.Y, forward.Z);
+	// 	DevelopText_SetCursorXY(devtext, 0, 2);
+	// 	DevelopText_AddString(devtext, "Forward: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 2);
+	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	// 	forward.X, forward.Y, forward.Z);
 
-		DevelopText_SetCursorXY(devtext, 0, 3);
-		DevelopText_AddString(devtext, "Up: ");
-		DevelopText_SetCursorXY(devtext, 20, 3);
-		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-		up.X, up.Y, up.Z);
+	// 	DevelopText_SetCursorXY(devtext, 0, 3);
+	// 	DevelopText_AddString(devtext, "Up: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 3);
+	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	// 	up.X, up.Y, up.Z);
 
-		DevelopText_SetCursorXY(devtext, 0, 4);
-		DevelopText_AddString(devtext, "Left: ");
-		DevelopText_SetCursorXY(devtext, 20, 4);
-		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-		left.X, left.Y, left.Z);
+	// 	DevelopText_SetCursorXY(devtext, 0, 4);
+	// 	DevelopText_AddString(devtext, "Left: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 4);
+	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	// 	left.X, left.Y, left.Z);
 
-		DevelopText_SetCursorXY(devtext, 0, 6);
-		DevelopText_AddString(devtext, "Pitch: ");
-		DevelopText_SetCursorXY(devtext, 20, 6);
-		DevelopText_AddString(devtext, "%03.2f\n",
-		pitch * (180.0f / M_PI));
+	// 	DevelopText_SetCursorXY(devtext, 0, 6);
+	// 	DevelopText_AddString(devtext, "Pitch: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 6);
+	// 	DevelopText_AddString(devtext, "%03.2f\n",
+	// 	pitch * (180.0f / M_PI));
 
-		DevelopText_SetCursorXY(devtext, 0, 7);
-		DevelopText_AddString(devtext, "Yaw: ");
-		DevelopText_SetCursorXY(devtext, 20, 7);
-		DevelopText_AddString(devtext, "%03.2f\n",
-		yaw * (180.0f / M_PI));
-		
-
-		// DevelopText_SetCursorXY(devtext, 0, 8);
-		// DevelopText_AddString(devtext, "Top Left: ");
-		// DevelopText_SetCursorXY(devtext, 20, 8);
-		// DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-		// verts[0].X, verts[0].Y, verts[0].Z);
+	// 	DevelopText_SetCursorXY(devtext, 0, 7);
+	// 	DevelopText_AddString(devtext, "Yaw: ");
+	// 	DevelopText_SetCursorXY(devtext, 20, 7);
+	// 	DevelopText_AddString(devtext, "%03.2f\n",
+	// 	yaw * (180.0f / M_PI));
+	if (pad->down & PAD_BUTTON_B) {
+			if (DrawingGObj == NULL) {
+				DrawingGObj = GObj_Create(0x11, 24, 0);
+				GObj_AddProc(DrawingGObj, drawing_think, 0);
+				GObj_AddGXLink(DrawingGObj, create_drawing, 0x0, 128);
+			}
+		}
+	if (pad->down & PAD_BUTTON_A) {
+			// SetupRenderTarget();
+			GOBJ* TargetCam = CreateCamera();
+			OSReport("NewCam: %p\n", TargetCam);
+		}
 
 	return;
 	}
 
-	// if(pad->down & PAD_BUTTON_A) {
-	// 	int slot = HSD_Randi(3);
-	// 	int	except[3] = {0};
-	// 	bp();
-	// 	store_except(except, slot);
-	// 	bp();
-	// };
-
-	// if(pad->down & PAD_BUTTON_X) {
-	// 	GOBJ *fighter = Fighter_GetGObj(0);
-	// 	int player_id = Fighter_GetExternalID(0);
-	// 	FighterData *fd = fighter->userdata;
-	// 	int victory_pose = VictoryScreen_GetResultScreenAnimation(player_id);
-	// 	EnterVictoryAnimation(0, victory_pose);
-	// 	// ActionStateChange(1.0f, 1.0f, 1.0f, fighter, 307, 4, 0);
-	// 	// Fighter_EnterSleep(fighter, 600);
-	// }
-
-	// if(pad->down & PAD_BUTTON_B) {
-	// Scene_ExitMinor();
-	// }
-
-// }
 
 void minor_exit() {
   OSReport("New Scene minor exit\n");
 }
 
-
-// int CountTeam(void) {
-//     int team_counts[4] = {0}; // Array to hold the count of players in each team
-
-//     // Count each player's team
-//     for (int slot = 0; slot < 4; slot++) {
-//         unsigned char team = Fighter_GetTeam(slot);
-//         if (team < 4) {
-//             team_counts[team]++;
-//         }
-//     }
-
-//     // Print team counts (optional, for verification)
-//     for (int team = 0; team < 4; team++) {
-//         OSReport("Team %d has %d players\n", team, team_counts[team]);
-//     }
-
-//     // If you need to find a specific condition (e.g., a team with exactly 3 players)
-//     for (int team = 0; team < 4; team++) {
-//         if (team_counts[team] == 3) {
-//             return team; // Returns the first team with exactly 3 players
-//         }
-//     }
-
-//     return -1; // Return -1 if no team has exactly 3 players
-// }
-
-// void store_except(int except[], int slot) {
-//     int index = 0;
-//     for (int i = 0; i <= 3; i++) {
-//         if (i != slot) {
-//             except[index++] = i;
-//         }
-//     }
-// }
 
 static inline void normalToColor(f32 NX, f32 NY, f32 NZ, u8 *r, u8 *g, u8 *b) {
     f32 length = sqrtf(NX * NX + NY * NY + NZ * NZ);
@@ -357,9 +354,12 @@ static void calculateNormal(Vec3 v1, Vec3 v2, Vec3 v3, f32 *NX, f32 *NY, f32 *NZ
 }
 
 void create_drawing(GOBJ *gobj) {
+	// if (NewCam == NULL) return;
+
 	Mtx mtx;
 	GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
 	COBJ* cobj = MainCameraGObj->hsd_object;
+	// COBJ* cobj = NewCam->hsd_object;
 	Setup2DDrawing(10.0f, 10.0f, 10);
 	u32 clr = 0x00E4FFFF;
 	HSD_LObjSetupInit(cobj);
@@ -367,7 +367,7 @@ void create_drawing(GOBJ *gobj) {
 	// GXClearVtxDesc();
 	// GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
 	// GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-	cobj = COBJ_GetCurrent();
+	// cobj = COBJ_GetCurrent();
 	COBJ_GetViewingMtx(cobj, &mtx);
 	GXSetCurrentMtx(0);
 	GXLoadPosMtxImm(mtx, 0);
@@ -398,61 +398,6 @@ void create_drawing(GOBJ *gobj) {
 
 	// SetDrawColor(red);
 	GXClearVtxDesc();
-	// GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
-	// GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
-	// GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGB, GX_RGB8, 0);
-	// GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-	// GXSetLineWidth(0x10, 0);
-
-	// GXBegin(GX_LINESTRIP, GX_VTXFMT0, 2);
-	// GXPosition3f32(near_plane[0].X, near_plane[0].Y, near_plane[0].Z);
-	// GXColor3u8( 0xff, 0x00, 0x00 );
-	// GXPosition3f32(far_plane[0].X, far_plane[0].Y, far_plane[0].Z);
-	// GXColor3u8( 0x44, 0x44, 0xff );
-
-	// GXBegin(GX_LINESTRIP, GX_VTXFMT0, 2);
-	// GXPosition3f32(near_plane[1].X, near_plane[1].Y, near_plane[1].Z);
-	// GXColor3u8( 0xff, 0x00, 0x00 );
-	// GXPosition3f32(far_plane[1].X, far_plane[1].Y, far_plane[1].Z);
-	// GXColor3u8( 0x44, 0x44, 0xff );
-
-	// GXBegin(GX_LINESTRIP, GX_VTXFMT0, 2);
-	// GXPosition3f32(near_plane[2].X, near_plane[2].Y, near_plane[2].Z);
-	// GXColor3u8( 0xff, 0x00, 0x00 );
-	// GXPosition3f32(far_plane[2].X, far_plane[2].Y, far_plane[2].Z);
-	// GXColor3u8( 0x44, 0x44, 0xff );
-
-	// GXBegin(GX_LINESTRIP, GX_VTXFMT0, 2);
-	// GXPosition3f32(near_plane[3].X, near_plane[3].Y, near_plane[3].Z);
-	// GXColor3u8( 0xff, 0x00, 0x00 );
-	// GXPosition3f32(far_plane[3].X, far_plane[3].Y, far_plane[3].Z);
-	// GXColor3u8( 0x44, 0x44, 0xff );
-
-	// GXBegin(GX_LINESTRIP, GX_VTXFMT0, 5);
-	// GXPosition3f32(near_plane[0].X, near_plane[0].Y, near_plane[0].Z);
-	// GXColor3u8( 0xff, 0x00, 0x00 );
-	// GXPosition3f32(near_plane[1].X, near_plane[1].Y, near_plane[1].Z);
-	// GXColor3u8( 0x00, 0xff, 0x00 );
-	// GXPosition3f32(near_plane[2].X, near_plane[2].Y, near_plane[2].Z);
-	// GXColor3u8( 0x00, 0x00, 0xff);
-	// GXPosition3f32(near_plane[3].X, near_plane[3].Y, near_plane[3].Z);
-	// GXColor3u8( 0xff, 0xff, 0x00 );
-	// GXPosition3f32(near_plane[0].X, near_plane[0].Y, near_plane[0].Z);
-	// GXColor3u8( 0xff, 0x00, 0x00 );
-
-	// GXSetLineWidth(0x20, 0);
-	// GXBegin(GX_LINESTRIP, GX_VTXFMT0, 5);
-	// GXPosition3f32(far_plane[0].X, far_plane[0].Y, far_plane[0].Z);
-	// GXColor3u8( 0x44, 0x44, 0xff );
-	// GXPosition3f32(far_plane[1].X, far_plane[1].Y, far_plane[1].Z);
-	// GXColor3u8( 0xff, 0x00, 0xff);
-	// GXPosition3f32(far_plane[2].X, far_plane[2].Y, far_plane[2].Z);
-	// GXColor3u8( 0xff, 0xff, 0xf );
-	// GXPosition3f32(far_plane[3].X, far_plane[3].Y, far_plane[3].Z);
-	// GXColor3u8( 0x00, 0xff, 0x00 );
-	// GXPosition3f32(far_plane[0].X, far_plane[0].Y, far_plane[0].Z);
-	// GXColor3u8( 0x44, 0x44, 0xff );
-
     GXClearVtxDesc();
     GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
     GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -599,61 +544,6 @@ void extract_frustum_far(float fov, float aspect, float near, float far, Vec3 *p
 	VECAdd(&vertices[2], &temp, &vertices[3]);
 }
 
-// void extract_frustum_far(float fov, float aspect, float near, float far, Vec3 *position, Vec3 *forward, Vec3 *up, Vec3* vertices) {
-//     float fov_radians = (fov * M_PI) / 180.0;  // Convert degrees to radians
-
-//     float half_height_near = tanf(fov_radians / 2) * near;
-//     float half_width_near = half_height_near * aspect;
-
-//     float half_height_far = tanf(fov_radians / 2) * far;
-//     float half_width_far = half_height_far * aspect;
-
-//     Vec3 temp, cross;
-
-//     // Calculate cross product of forward and up vectors
-//     VECCrossProduct(forward, up, &cross);
-
-//     // Normalize the cross vector
-//     VECNormalize(&cross, &cross);
-//     Vec3 forward_norm;
-//     // Normalize the forward vector
-//     VECNormalize(forward, &forward_norm);
-
-//     Vec3 up_norm;
-//     // Normalize the up vector
-//     VECNormalize(up, &up_norm);
-
-//     ///////////////////////////////////////////////////////////////////////////////////////////
-//     // FAR PLANE
-//     // Top left far
-//     VECScale(&forward_norm, &temp, far);
-//     VECAdd(position, &temp, &vertices[0]);
-//     VECScale(&up_norm, &temp, half_height_near);
-//     VECAdd(&vertices[0], &temp, &vertices[0]);
-//     VECScale(&cross, &temp, -half_width_near);
-//     VECAdd(&vertices[0], &temp, &vertices[0]);
-
-//     // Top right far
-//     VECScale(&cross, &temp, 2 * half_width_near);
-//     VECAdd(&vertices[0], &temp, &vertices[1]);
-
-//     // Bottom right far
-//     VECScale(&forward_norm, &temp, far);
-//     VECAdd(position, &temp, &vertices[2]);
-//     VECScale(&up_norm, &temp, -half_height_near);
-//     VECAdd(&vertices[2], &temp, &vertices[2]);
-//     VECScale(&cross, &temp, half_width_near);
-//     VECAdd(&vertices[2], &temp, &vertices[2]);
-
-//     // Bottom left farfar
-//     VECScale(&cross, &temp, -2 * half_width_near);
-//     VECAdd(&vertices[2], &temp, &vertices[3]);
-
-// 	// for (int i = 0; i < 4; i++) {
-// 	// 	OSReport("Vert: %d X: %f, Y: %f, Z: %f\n", i, vertices[i].X, vertices[i].Y, vertices[i].Z);
-// 	// }
-// }
-
 
 // CardFace *CardFace_Init(GUI_GameSetup *gui) {
 // 	CardFace *cf = calloc(sizeof(CardFace));
@@ -686,32 +576,32 @@ void InputsThink(GOBJ *gobj) {
 	HandleCardInputs();
 }
 
-void HandleCardInputs() {
-  u8 port = R13_U8(-0x5108);
-  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
-  u64 downInputs = Pad_GetDown(port);
-  CardDoor *cd = data->cd;
-  CardFace *fd = data->fd;
-  JOBJ *door = cd->door_jobjs[cd->door_index];
+// void HandleCardInputs() {
+//   u8 port = R13_U8(-0x5108);
+//   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
+//   u64 downInputs = Pad_GetDown(port);
+//   CardDoor *cd = data->cd;
+//   CardFace *fd = data->fd;
+//   JOBJ *door = cd->door_jobjs[cd->door_index];
 
-	if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
-		if (cd->door_index < 3) {
-			cd->door_index++;
-			fd->face_index++;
-			// DoorStateChange(cd, cd->door_index);
-			SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
-		}
+// 	if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
+// 		if (cd->door_index < 3) {
+// 			cd->door_index++;
+// 			fd->face_index++;
+// 			// DoorStateChange(cd, cd->door_index);
+// 			SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
+// 		}
 
-	} else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
-		if (cd->door_index > 0) {
-			cd->door_index--;
-			fd->face_index--;
-			SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
-		}
+// 	} else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
+// 		if (cd->door_index > 0) {
+// 			cd->door_index--;
+// 			fd->face_index--;
+// 			SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
+// 		}
 
-	}
+// 	}
 	// OSReport("DOOR JOBJ: %p\n", door);
-}
+// }
 
 void CObjThink(GOBJ *gobj) {
 	COBJ *cobj = gobj->hsd_object;
@@ -727,3 +617,23 @@ void CObjThink(GOBJ *gobj) {
 	CObj_EndCurrent();
 }
 
+GOBJ* CreateCamera() {
+	RenderTargetCam = GObj_Create(0x13, 0x14, 0);
+	COBJ* cobj = COBJ_LoadDesc((COBJDesc *) 0x803bcb64);
+	GObj_AddObject(RenderTargetCam, (u8) 0x804d784b, cobj);
+	// GOBJ_InitCamera(RenderTargetCam, (void *) 0x803910d8, 8);
+	GOBJ_InitCamera(RenderTargetCam, UpdateRenderTarget, 8);
+	// GObj_AddProc(NewCam, (void *) 0x8002ddc4, 0x12);
+	return RenderTargetCam;
+	}
+
+void UpdateRenderTarget() {
+	PIPData *img = pip_data;
+	GOBJ* cam = Camera_LoadCameraEntity();
+	// CObj_UpdateFromCamera(cam);
+	CopyCObjFromMainCamera(RenderTargetCam);
+	COBJ* cobj = RenderTargetCam->hsd_object;
+	CObj_SetCurrent(cobj);
+	cobj->projection_param.perspective.fov = 10.f;
+	HSD_ImageDescCopyFromEFB(img->image, 0, 0, true);
+}
