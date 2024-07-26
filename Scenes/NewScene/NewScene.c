@@ -80,18 +80,18 @@ OSReport("New Scene minor load\n");
 	
 	DOBJ* GX_FRAME = GX_JOBJ->child->dobj->next->next;
 	DOBJ* GX_MAIN = GX_JOBJ->child->dobj->next;
+	GX_JOBJ->child->scale.X = 1.0f;
 
 
 
 
 	pip_data = calloc(52);
 	_HSD_ImageDesc* GX_IMAGE = GX_MAIN->mobj->tobj->imagedesc;
+	GX_IMAGE->width = 150;
+	GX_IMAGE->height = 150;
 	pip_data->image = GX_IMAGE;
-	GX_AllocImageData(GX_IMAGE->img_ptr, 64, 80, 5, 2559);
-	
-
-
-
+	pip_data->texture_mtx = &GX_MAIN->mobj->tobj->mtx;
+	GX_AllocImageData(GX_IMAGE->img_ptr, 150, 150, 5, 2559);
 
 
 	// create lights
@@ -157,16 +157,16 @@ OSReport("New Scene minor load\n");
 
 	u8 colour[4] = {0, 0, 0, 127};
 	void *data = calloc(4096); // Allocate memory for one DevText structure
-	devtext = DevelopText_CreateDataTable(3, 0, 20, 50, 10, data);
+	devtext = DevelopText_CreateDataTable(3, 100, 0, 50, 18, data);
 	DevelopText_Activate((void *) 0x804d6e1c, devtext);
 	DevelopText_StoreBGColor(devtext, colour);
 	DevelopText_ShowBG(devtext);
-	// DevelopText_StoreTextScale(devtext, 8.0, 10.0);
-	// DevelopText_ShowText(devtext);
+	DevelopText_StoreTextScale(devtext, 8.0, 10.0);
+	DevelopText_ShowText(devtext);
 	// devtext->show_cursor = 0;
 	DevelopText_HideCursor(devtext);
-	DevelopText_HideBG(devtext);
-	DevelopText_HideText(devtext);
+	// DevelopText_HideBG(devtext);
+	// DevelopText_HideText(devtext);
 	//////////////////////////////////
 	static void *fx;
 	HSD_Archive *PlBx = MEX_LoadRelArchive("PlBx.dat", &fx, "ftDataBoy");
@@ -234,83 +234,170 @@ OSReport("New Scene minor load\n");
 void minor_think() {
 	HSD_Pad* pad = PadGet(0, PADGET_ENGINE);
 
-	// GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
-	// COBJ* MainCameraCObj = MainCameraGObj->hsd_object;
+	GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
+	COBJ* MainCameraCObj = MainCameraGObj->hsd_object;
 	// CObj_SetCurrent(MainCameraCObj);
 
-	// Vec3 interest = MainCameraCObj->interest->pos;
-	// float aspect = MainCameraCObj->projection_param.perspective.aspect;
-	// float fov = MainCameraCObj->projection_param.perspective.fov;
+	Vec3 interest = MainCameraCObj->interest->pos;
+	float aspect = MainCameraCObj->projection_param.perspective.aspect;
+	float fov = MainCameraCObj->projection_param.perspective.fov;
 	// float print_fov = fov * (M_PI / 180.0f);
-	// // float near = 1.0f;
-	// // float far = 1000.0f;
-	// Vec3 forward;
-	// Vec3 up;
-	// Vec3 left;
-	// Vec3 pos;
+	float near = 1.0f;
+	float far = 1000.0f;
+	Vec3 forward;
+	Vec3 up;
+	Vec3 left;
+	Vec3 pos;
 
-	// CObjGetEyeVector(MainCameraCObj, &forward);
-	// CObjGetUpVector(MainCameraCObj, &up);
-	// CObjGetLeftVector(MainCameraCObj, &left);
-	// CObjGetEyePosition(MainCameraCObj, &pos);
+	CObjGetEyeVector(MainCameraCObj, &forward);
+	CObjGetUpVector(MainCameraCObj, &up);
+	CObjGetLeftVector(MainCameraCObj, &left);
+	CObjGetEyePosition(MainCameraCObj, &pos);
 
-	// float pitch = atan2(forward.Y, -forward.Z);
-	// float yaw = atan2(-forward.X, -forward.Z);
+	float pitch = atan2(forward.Y, -forward.Z);
+	float yaw = atan2(-forward.X, -forward.Z);
+
+///////////////////////////////////////////////////////////////////////////////////////////	
+		DevelopText_EraseAllText(devtext);
+		DevelopText_SetCursorXY(devtext, 5, 0);
+		DevelopText_AddString(devtext, "Main Camera\n");
+
+		DevelopText_SetCursorXY(devtext, 0, 1);
+		DevelopText_AddString(devtext, "Pos: ");
+		DevelopText_SetCursorXY(devtext, 20, 1);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	 	MainCameraCObj->eye_position->pos.X, MainCameraCObj->eye_position->pos.Y, MainCameraCObj->eye_position->pos.Z);
 	
-	// 	DevelopText_EraseAllText(devtext);
+		DevelopText_SetCursorXY(devtext, 0, 2);
+		DevelopText_AddString(devtext, "Interest: ");
+		DevelopText_SetCursorXY(devtext, 20, 2);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		MainCameraCObj->interest->pos.X, MainCameraCObj->interest->pos.Y, MainCameraCObj->interest->pos.Z);
+
+		DevelopText_SetCursorXY(devtext, 0, 3);
+		DevelopText_AddString(devtext, "Forward: ");
+		DevelopText_SetCursorXY(devtext, 20, 3);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		forward.X, forward.Y, forward.Z);
+
+		DevelopText_SetCursorXY(devtext, 0, 4);
+		DevelopText_AddString(devtext, "Up: ");
+		DevelopText_SetCursorXY(devtext, 20, 4);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		up.X, up.Y, up.Z);
+
+		DevelopText_SetCursorXY(devtext, 0, 5);
+		DevelopText_AddString(devtext, "Left: ");
+		DevelopText_SetCursorXY(devtext, 20, 5);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		left.X, left.Y, left.Z);
+
+		DevelopText_SetCursorXY(devtext, 0, 6);
+		DevelopText_AddString(devtext, "Pitch: ");
+		DevelopText_SetCursorXY(devtext, 20, 6);
+		DevelopText_AddString(devtext, "%03.2f\n",
+		pitch * (180.0f / M_PI));
+
+		DevelopText_SetCursorXY(devtext, 0, 7);
+		DevelopText_AddString(devtext, "Yaw: ");
+		DevelopText_SetCursorXY(devtext, 20, 7);
+		DevelopText_AddString(devtext, "%03.2f\n",
+		yaw * (180.0f / M_PI));
+///////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////	
+		MainCameraCObj = RenderTargetCam->hsd_object;
+		CObjGetEyeVector(MainCameraCObj, &forward);
+		CObjGetUpVector(MainCameraCObj, &up);
+		CObjGetLeftVector(MainCameraCObj, &left);
+		CObjGetEyePosition(MainCameraCObj, &pos);
+		interest = MainCameraCObj->interest->pos;
+
+		pitch = atan2(forward.Y, -forward.Z);
+		yaw = atan2(-forward.X, -forward.Z);
+		DevelopText_SetCursorXY(devtext, 5, 9);
+		DevelopText_AddString(devtext, "Render Camera\n");
+
+		DevelopText_SetCursorXY(devtext, 0, 10);
+		DevelopText_AddString(devtext, "Pos: ");
+		DevelopText_SetCursorXY(devtext, 20, 10);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+	 	MainCameraCObj->eye_position->pos.X, MainCameraCObj->eye_position->pos.Y, MainCameraCObj->eye_position->pos.Z);
 	
-	// 	DevelopText_SetCursorXY(devtext, 0, 0);
-	// 	DevelopText_AddString(devtext, "Pos: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 0);
-	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-	//  	MainCameraCObj->eye_position->pos.X, MainCameraCObj->eye_position->pos.Y, MainCameraCObj->eye_position->pos.Z);
-	
-	// 	DevelopText_SetCursorXY(devtext, 0, 1);
-	// 	DevelopText_AddString(devtext, "Interest: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 1);
-	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-	// 	MainCameraCObj->interest->pos.X, MainCameraCObj->interest->pos.Y, MainCameraCObj->interest->pos.Z);
+		DevelopText_SetCursorXY(devtext, 0, 11);
+		DevelopText_AddString(devtext, "Interest: ");
+		DevelopText_SetCursorXY(devtext, 20, 11);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		MainCameraCObj->interest->pos.X, MainCameraCObj->interest->pos.Y, MainCameraCObj->interest->pos.Z);
 
-	// 	DevelopText_SetCursorXY(devtext, 0, 2);
-	// 	DevelopText_AddString(devtext, "Forward: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 2);
-	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-	// 	forward.X, forward.Y, forward.Z);
+		DevelopText_SetCursorXY(devtext, 0, 12);
+		DevelopText_AddString(devtext, "Forward: ");
+		DevelopText_SetCursorXY(devtext, 20, 12);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		forward.X, forward.Y, forward.Z);
 
-	// 	DevelopText_SetCursorXY(devtext, 0, 3);
-	// 	DevelopText_AddString(devtext, "Up: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 3);
-	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-	// 	up.X, up.Y, up.Z);
+		DevelopText_SetCursorXY(devtext, 0, 13);
+		DevelopText_AddString(devtext, "Up: ");
+		DevelopText_SetCursorXY(devtext, 20, 13);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		up.X, up.Y, up.Z);
 
-	// 	DevelopText_SetCursorXY(devtext, 0, 4);
-	// 	DevelopText_AddString(devtext, "Left: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 4);
-	// 	DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
-	// 	left.X, left.Y, left.Z);
+		DevelopText_SetCursorXY(devtext, 0, 14);
+		DevelopText_AddString(devtext, "Left: ");
+		DevelopText_SetCursorXY(devtext, 20, 14);
+		DevelopText_AddString(devtext, "%03.2f, %03.2f, %03.2f\n",
+		left.X, left.Y, left.Z);
 
-	// 	DevelopText_SetCursorXY(devtext, 0, 6);
-	// 	DevelopText_AddString(devtext, "Pitch: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 6);
-	// 	DevelopText_AddString(devtext, "%03.2f\n",
-	// 	pitch * (180.0f / M_PI));
+		DevelopText_SetCursorXY(devtext, 0, 15);
+		DevelopText_AddString(devtext, "Pitch: ");
+		DevelopText_SetCursorXY(devtext, 20, 15);
+		DevelopText_AddString(devtext, "%03.2f\n",
+		pitch * (180.0f / M_PI));
 
-	// 	DevelopText_SetCursorXY(devtext, 0, 7);
-	// 	DevelopText_AddString(devtext, "Yaw: ");
-	// 	DevelopText_SetCursorXY(devtext, 20, 7);
-	// 	DevelopText_AddString(devtext, "%03.2f\n",
-	// 	yaw * (180.0f / M_PI));
-	if (pad->down & PAD_BUTTON_B) {
-			if (DrawingGObj == NULL) {
-				DrawingGObj = GObj_Create(0x11, 24, 0);
-				GObj_AddProc(DrawingGObj, drawing_think, 0);
-				GObj_AddGXLink(DrawingGObj, create_drawing, 0x0, 128);
-			}
-		}
+		DevelopText_SetCursorXY(devtext, 0, 16);
+		DevelopText_AddString(devtext, "Yaw: ");
+		DevelopText_SetCursorXY(devtext, 20, 16);
+		DevelopText_AddString(devtext, "%03.2f\n",
+		yaw * (180.0f / M_PI));
+
+		DevelopText_SetCursorXY(devtext, 0, 17);
+		DevelopText_AddString(devtext, "FOV: ");
+		DevelopText_SetCursorXY(devtext, 20, 17);
+		DevelopText_AddString(devtext, "%03.2f\n",
+		MainCameraCObj->projection_param.perspective.fov);
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+	// if (pad->down & PAD_BUTTON_B) {
+	// 		if (DrawingGObj == NULL) {
+	// 			DrawingGObj = GObj_Create(0x11, 24, 0);
+	// 			GObj_AddProc(DrawingGObj, drawing_think, 0);
+	// 			GObj_AddGXLink(DrawingGObj, create_drawing, 0x0, 128);
+	// 		}
+	// 	}
+
 	if (pad->down & PAD_BUTTON_A) {
-			// SetupRenderTarget();
-			GOBJ* TargetCam = CreateCamera();
-			OSReport("NewCam: %p\n", TargetCam);
+			// Camera_SetFixed();
+			// Match_SetStageRenderFlags(0);
+			CObj_SetCurrent(RenderTargetCam->hsd_object);
+			CObj_UpdateFromCamera(RenderTargetCam);
+			
+		}
+
+	if (pad->down & PAD_BUTTON_X) {
+			DevelopText_HideText(devtext);
+			DevelopText_HideBG(devtext);
+		}
+	if (pad->down & PAD_BUTTON_Y) {
+			DevelopText_ShowText(devtext);
+			DevelopText_ShowBG(devtext);
+		}
+
+	if (pad->down & PAD_BUTTON_B) {
+			Vec3 start = {0.0f, 10.0f, 0.0f};
+			Vec3 end = {110.0f, 0.0f, 110.0f};
+			float radius = 100.0f;
+			Develop_DrawSphere(radius, &start, &end, &purple, &purple);
 		}
 
 	return;
@@ -619,21 +706,84 @@ void CObjThink(GOBJ *gobj) {
 
 GOBJ* CreateCamera() {
 	RenderTargetCam = GObj_Create(0x13, 0x14, 0);
+	// COBJDesc* desc = calloc(sizeof(COBJDesc));
+
+	// COBJ_Init(desc, (COBJDesc *) 0x803bcb64);
 	COBJ* cobj = COBJ_LoadDesc((COBJDesc *) 0x803bcb64);
-	GObj_AddObject(RenderTargetCam, (u8) 0x804d784b, cobj);
+	GObj_AddObject(RenderTargetCam, (u8) 0x803e0f34, cobj);
 	// GOBJ_InitCamera(RenderTargetCam, (void *) 0x803910d8, 8);
-	GOBJ_InitCamera(RenderTargetCam, UpdateRenderTarget, 8);
+	GOBJ_InitCamera(RenderTargetCam, UpdateRenderTarget, 2);
+	cobj->projection_param.perspective.fov = 80.f;
 	// GObj_AddProc(NewCam, (void *) 0x8002ddc4, 0x12);
+	GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
+	OSReport("MainCameraGObj: %p\n", MainCameraGObj);
+	OSReport("RenderTargetCam: %p\n", RenderTargetCam);
 	return RenderTargetCam;
 	}
 
-void UpdateRenderTarget() {
+void UpdateRenderTarget(GOBJ* gobj) {
 	PIPData *img = pip_data;
-	GOBJ* cam = Camera_LoadCameraEntity();
-	// CObj_UpdateFromCamera(cam);
-	CopyCObjFromMainCamera(RenderTargetCam);
-	COBJ* cobj = RenderTargetCam->hsd_object;
-	CObj_SetCurrent(cobj);
-	cobj->projection_param.perspective.fov = 10.f;
-	HSD_ImageDescCopyFromEFB(img->image, 0, 0, true);
+	COBJ* cobj = gobj->hsd_object;
+	Mtx* img_mtx = pip_data->texture_mtx;
+	Mtx* b;
+	Mtx* mtx;
+	
+	GOBJ* MainCameraGObj = Camera_LoadCameraEntity();
+	u8 (*color)[4] = (u8 (*)[4])0x80452c70; // MainCamera bg color
+	// OSReport("colors: %x, %x, %x, %x\n", (*color)[0], (*color)[1], (*color)[2], (*color)[3]);
+	if (CObj_SetCurrent(cobj))
+	{
+		// MainCameraGObj->cobj_links = (0 << 0);
+		CObj_SetEraseColor((*color)[0], (*color)[1], (*color)[2], (*color)[3]);
+		CObj_EraseScreen(cobj, 1, 1, 1);
+		// LObj_DeleteCurrentAll(0);
+		Match_SetStageRenderFlags(1);
+		Match_SetUnkRenderFlags(1);
+
+		gobj->cobj_links = (1 << 3) + (1 << 4) + (1 << 5) + (1 << 6) + (1 << 7);
+		CObj_RenderGXLinks(gobj, 7);
+
+		Match_SetStageRenderFlags(0);
+		Match_SetUnkRenderFlags(0);
+
+		gobj->cobj_links = (1 << 3) + (1 << 4) + (1 << 5) + (1 << 6) + (1 << 7);
+		CObj_RenderGXLinks(gobj, 7);
+
+
+		// gobj->cobj_links = (8 << 0);
+		// int* links = (int*)gobj->cobj_links+4;
+		// links = (int*)0x25;
+		// Fog_Set(0);
+
+		// OSReport("cobj_links: %p\n", gobj->cobj_links);
+		// OSReport("val: %p\n", &gobj->cobj_links);
+		// OSReport("val: %016llx\n", MainCameraGObj->cobj_links);
+		// OSReport("val2: %016llx\n\n", gobj->cobj_links);
+
+		gobj->cobj_links = (0 << 0);
+		Match_SetStageRenderFlags(0);
+		Match_SetUnkRenderFlags(0);
+		CObj_EndCurrent();
+	}
+
+	HSD_ImageDescCopyFromEFB(img->image, 250, 200, true);
+	CObj_SetCurrent(MainCameraGObj->hsd_object);
+	
+	CObj_SetEraseColor((*color)[0], (*color)[1], (*color)[2], (*color)[3]);
+	CObj_EraseScreen(cobj, 1, 1, 1);
+	MainCameraGObj->cobj_links = (1 << 3) + (1 << 4) + (1 << 5) + (1 << 6) + (1 << 7);
+	Match_SetStageRenderFlags(1);
+	Match_SetUnkRenderFlags(1);
+	CObj_RenderGXLinks(MainCameraGObj, 7);
+
+	MainCameraGObj->cobj_links = (1 << 3) + (1 << 4) + (1 << 5) + (1 << 6) + (1 << 7);
+	Match_SetStageRenderFlags(0);
+	Match_SetUnkRenderFlags(0);
+	CObj_RenderGXLinks(MainCameraGObj, 7);
+
+
+	// C_MTXLightPerspective(cobj->projection_param.perspective.fov, cobj->projection_param.perspective.aspect, -0.49f, 0.49f, 0.5f, 0.5f, mtx);
+	// COBJ_GetViewingMtx(cobj, b);
+	// PSMTXConcat(img_mtx, b, img_mtx);
+	
 }

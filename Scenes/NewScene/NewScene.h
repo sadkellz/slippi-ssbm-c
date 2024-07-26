@@ -138,6 +138,7 @@ typedef struct SceneDesc {
 } SceneDesc;
 
 typedef struct PIPData {
+  Mtx* texture_mtx;
   _HSD_ImageDesc *image;
 } PIPData;
 
@@ -200,8 +201,14 @@ void* (*CObjGetEyeVector)(COBJ *cobj, Vec3 *out) = (void*) 0x8036885c;
 float* (*CObjGetEyeDistance)(COBJ *cobj) = (void*) 0x80368a08;
 float* (*CObjGetLeftVector)(COBJ *cobj, Vec3 *out) = (void*) 0x803692e8;
 float* (*CObjGetUpVector)(COBJ *cobj, Vec3 *out) = (void*) 0x80368e70;
-float* (*CObj_UpdateFromCamera)(GOBJ *gobj) = (void*) 0x8002a4ac;
-float* (*CopyCObjFromMainCamera)(GOBJ *gobj) = (void*) 0x8021eb10;
+void* (*CObj_UpdateFromCamera)(GOBJ *gobj) = (void*) 0x8002a4ac;
+void* (*CopyCObjFromMainCamera)(GOBJ *gobj) = (void*) 0x8021eb10;
+void* (*Match_SetUnkRenderFlags)(int flags) = (void*) 0x80031074;
+void* (*Camera_SetFixed)(void) = (void*) 0x8002f8f4;
+void* (*UpdateReflection)(GOBJ *gobj) = (void*) 0x801ccea0;
+void* (*C_MTXPerspective)(float fov, float aspect, float near, float far, Mtx *mtx) = (void*) 0x80342bec;
+void* (*C_MTXLightPerspective)(float fov, float aspect, float stretch_x, float stretch_y, float z_x_mult, float z_y_mult, Mtx *out) = (void*) 0x80342954;
+
 
 
 
@@ -246,7 +253,7 @@ void extract_frustum_near(float fov, float aspect, float near, float far, Vec3 *
 void drawCubeWithNormals();
 void extract_frustum_far(float fov, float aspect, float near, float far, Vec3 *position, Vec3 *forward, Vec3 *up, Vec3* vertices);
 GOBJ* CreateCamera();
-void UpdateRenderTarget();
+void UpdateRenderTarget(GOBJ* gobj);
 
 void ListPreloadFighters();
 void CObjThink(GOBJ *gobj);
