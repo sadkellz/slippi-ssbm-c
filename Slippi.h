@@ -1,7 +1,7 @@
 #ifndef SLIPPI_H
 #define SLIPPI_H
 
-#include "../MexTK/mex.h"
+#include "m-ex/MexTK/mex.h"
 
 #include <stdbool.h>
 
