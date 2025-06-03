@@ -18,6 +18,8 @@ void minor_think() {
 
     // 3v1
     if (is_teams) {
+
+        // check if we've clicked the top left corner
         CheckForModeSwitch();
         
         if (IsCustomMode()) {
@@ -25,53 +27,44 @@ void minor_think() {
             CharacterKind c_kind;
             CharacterKind last_played = stc_tvo_characters->last_played;
             u8 stage_id;
+            u8 team;
 
-
-            // this lets us skip the stage select
+            // this lets us skip the stage select, also has to be set before we've locked in
             R13_U8(R13_OFFSET_ISWINNER) = 1;
             R13_U8(R13_OFFSET_CHOSESTAGE) = 1;
+            
+            css_data = GetSlpCSSDT();
 
             // init our 3v1 character data
-            bp();
+            Tvo_DataInit();
 
-            if (strncmp(stc_tvo_characters, "cant", 4) == 0) {
-                // stc_tvo_characters = HSD_MemAlloc(sizeof(TvoCharacterData));
-                memset(stc_tvo_characters, 0, sizeof(TvoCharacterData));
-                last_played = -1;
-                OSReport("Init 3v1 Characters\n");
-            }
-
-            // We overwrite selections to make sure remote player can't cheat their selections
-            css_data = GetSlpCSSDT();
-            
+            // we run most of the setup after we're locked in
             if (css_data->prevLockInState) {
-                stage_id = 0x1F;
+                stage_id = 0x1F; // battlefield default
                 bool stage_option = false;
-                if (css_data->msrb->localPlayerIndex == 0) {
-                    stage_id = 20;
+                
+                // get stage
+                if (css_data->msrb->localName == css_data->msrb->p1Name) {
+                    Tvo_GetStage(&stage_id);
                     stage_option = true;
                 }
-
-                // this is our first character
-                if (last_played == -1) {
-                    c_kind = HSD_Randi(26);
-                    SetMatchSelections(c_kind, 0, 1, stage_id, stage_option, 0);
-                    return;
-                }
-                // if we have lost with this character, lets roll a new one
-                else if (TVO_HAS_PLAYED(stc_tvo_characters, last_played) == true) {
-                    c_kind = HSD_Randi(26);
-                }
-                // we are still winning, lets stay
-                else {
-                    c_kind = last_played;
-                    SetMatchSelections(c_kind, 0, 1, stage_id, stage_option, 0);
-                }
-
-            
                 
+                // getting character
+                Tvo_GetCharacter(last_played, &c_kind);
+
+                // team init
+                team = css_data->msrb->gameInfoBlock.playerData[css_data->msrb->localPlayerIndex].team;
+                Tvo_GetSoloPlayer(css_data->msrb->gameInfoBlock);
+                if (stc_tvo_characters->solo_player > 4) {
+                    OSReport("No solo player\n");
+                }
+
+                // override match selections
+                SetMatchSelections(c_kind, team, 1, stage_id, stage_option, team);
+                return;
             }
         }
+
         return;
     }
     return;
@@ -98,8 +91,9 @@ void minor_load(VSMinorData *minor_data) {
 void minor_exit(VSMinorData *minor_data) {
     CSS_exit();
 
+    // debug match selections
     for (int i = 0; i < 26; i++) {
-        OSReport("tvo has played %d: %d\n", i, (stc_tvo_characters->has_played & (1 << i)) ? 1 : 0);
+        OSReport("has played %d: %d\n", i, (stc_tvo_characters->has_played & (1 << i)) ? 1 : 0);
     }
     // OSReport("CSS_exit\n");
 }

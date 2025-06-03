@@ -2,19 +2,26 @@
 #define CUSTOM_VS_C
 
 #include "Vs.h"
-#include "../../3v1/CustomGame.h"
-#include "../../../Common.h"
-#include "../../../ExiSlippi.h"
-#include "../../../Slippi.h"
+
 
 void minor_think() {
 	// 3v1
 	if (IsCustomMode()) {
 		if (*stc_frame_count == 0) {
-			Fighter_SetStocks(0, 1);
-			Fighter_SetStocks(1, 0);
-			Fighter_SetStocks(2, 0);
-			Fighter_SetStocks(3, 1);
+			OSReport("Set Stocks\n");
+
+			// exit early if there is no solo player
+			if (stc_tvo_characters->solo_player > 4) {
+				// OSReport("Solo player is not valid: %d\n", stc_tvo_characters->solo_player);
+				Match_EndImmediate();
+				return;
+			}
+
+			for (int i = 0; i < 4; i++) {
+				if (i != stc_tvo_characters->solo_player) {
+					Fighter_SetStocks(i, 1);
+				}
+			}
 		}
 	}
 
@@ -48,7 +55,11 @@ void minor_exit(ScDataMatchExit* minor_data) {
 	}
 
 	VS_Exit(minor_data); // this will populate our standings
-	
+
+	bp();
+	bool success = Tvo_WasMatchSuccessful(minor_data);
+	OSReport("Success: %d\n", success);
+
 	return;
 }
 
