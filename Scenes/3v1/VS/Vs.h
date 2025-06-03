@@ -32,11 +32,18 @@ typedef struct ScDataVictory
     u8 unk[0x2278];
 } ScDataVictory;
 
-
 void (*VS_Think)() = (void *) 0x8016D800;
 void (*VS_Load)(MatchInit* minor_data) = (void *) 0x8016E934;
 void (*VS_Exit)(ScDataVictory* minor_data) = (void *) 0x8016E9C8;
 
+ScDataVS* (*VS_GetData)() = (void *) 0x801a5244;
+
 void *stc_last_match = (void *)0x80479d98;
+int *stc_frame_count = (int *)0x80479D60;
+MajorScene *stc_mj_table = (MajorScene *)0x803daca4;
+
+
+// 3v1 Functions
+// void SortTeam
 
 #endif

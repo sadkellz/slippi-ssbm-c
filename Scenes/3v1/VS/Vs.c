@@ -3,17 +3,23 @@
 
 #include "Vs.h"
 #include "../../../Common.h"
-
-SharedMinorData* data;
+#include "../../3v1/CustomGame.h"
 
 void minor_think() {
+	// 3v1
+	if (IsCustomMode()) {
+		if (*stc_frame_count == 0) {
+			Fighter_SetStocks(0, 1);
+		}
+	}
+
 	VS_Think();
 	return;
 }
 
 void minor_load(MatchInit* minor_data) {
-	bp();
-	minor_data->playerData[0].stocks = 1;
+	OSReport("Loading VS\n");
+	// OSReport("Current Major: %d\n", Scene_GetCurrentMajor);
 	VS_Load(minor_data);
 	
 	return;

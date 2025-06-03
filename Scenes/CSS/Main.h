@@ -1,5 +1,4 @@
 #ifndef SLIPPI_CSS_MAIN_H
 #define SLIPPI_CSS_MAIN_H
 
-
 #endif SLIPPI_CSS_MAIN_H

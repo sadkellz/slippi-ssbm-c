@@ -2,7 +2,7 @@
 #define EXI_SLIPPI_H
 
 #include "./m-ex/MexTK/mex.h"
-
+  
 typedef enum ExiSlippi_Command {
   ExiSlippi_Command_SET_MATCH_SELECTIONS = 0xB5,
   ExiSlippi_Command_CLEANUP_CONNECTION = 0xBA,
