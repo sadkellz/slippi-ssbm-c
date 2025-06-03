@@ -21,10 +21,16 @@ typedef struct MexMajorScene
     int x40;
 } MexMajorScene;
 
+typedef struct TVOChararacters {
+    bool has_played[26];
+} TVOChararacters;
+
+
 bool IsCustomMode() {
     return R13_U8(R13_OFFSET_ISCUSTOM);
 }
 
 // int *css = (int *)0x80479D60;
+TVOChararacters *stc_tvo_characters = (TVOChararacters *)0x803eadc8; // this is some debug strings for camera screenshot // size 0x3F
 
 #endif
