@@ -145,6 +145,31 @@ typedef struct SlippiCSSDataTable {
 	u8 teamCostumeIndex;
 } SlippiCSSDataTable;
 
+
+// this isnt the full struct but i cant be bothered
+// line 230 in Online.s
+typedef struct SlippiOnlineDataBuffer {
+    /* 0x00 */ u8 local_player_idx;
+    /* 0x01 */ u8 online_player_idx;
+    /* 0x02 */ u8 input_source_idx;
+    /* 0x03 */ u8 _padding1; // Padding to align frame to 4 bytes
+    
+    /* 0x04 */ u32 frame;
+    /* 0x08 */ u32 rng_offset;
+    /* 0x0C */ u32 game_end_frame;
+    
+    /* 0x10 */ bool is_game_over;
+    /* 0x11 */ bool is_disconnected;
+    /* 0x12 */ bool is_disconnect_state_displayed;
+    /* 0x13 */ bool is_desync_state_displayed;
+    /* 0x14 */ bool is_desync_risk_displayed;
+    /* 0x15 */ bool is_frame_advance;
+    
+    /* 0x16 */ u8 last_local_inputs[0xC];
+    /* 0x26 */ u8 delay_frames;
+    /* 0x27 */ u8 delay_buffer_idx;
+} SlippiOnlineDataBuffer;
+
 #pragma pack()
 
 typedef struct SlippiCSSDataTableRef {

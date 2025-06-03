@@ -7,6 +7,9 @@
 #define R13_OFFSET_ISCUSTOM -0x4DA7 // some single button mode offset, hopefully unused elsewhere
 #define CSS_CORNER_XTHRESH -20.f
 #define CSS_CORNER_YTHRESH 22.f
+#define TVO_HAS_PLAYED(chardata, index) ((chardata)->has_played & (1 << (index)))
+#define TVO_SET_PLAYED(chardata, index) ((chardata)->has_played |= (1 << (index)))
+#define TVO_CLEAR_PLAYED(chardata, index) ((chardata)->has_played &= ~(1 << (index)))
 
 extern Text *text;
 
@@ -21,9 +24,10 @@ typedef struct MexMajorScene
     int x40;
 } MexMajorScene;
 
-typedef struct TVOChararacters {
-    bool has_played[26];
-} TVOChararacters;
+typedef struct TvoCharacterData {
+    u32 has_played; 
+    CharacterKind last_played;
+} TvoCharacterData;
 
 
 bool IsCustomMode() {
@@ -31,6 +35,6 @@ bool IsCustomMode() {
 }
 
 // int *css = (int *)0x80479D60;
-TVOChararacters *stc_tvo_characters = (TVOChararacters *)0x803eadc8; // this is some debug strings for camera screenshot // size 0x3F
+TvoCharacterData *stc_tvo_characters = (TvoCharacterData *)0x803eadc8; // this is some debug strings for camera screenshot // size 0x3F
 
 #endif

@@ -35,7 +35,6 @@ void InitOnlineCSS() {
 
 
 // 3v1
-
 void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option, u8 team_id) {
     ExiSlippi_SetSelections_Query *ssq = calloc(sizeof(ExiSlippi_SetSelections_Query));
     ssq->command = ExiSlippi_Command_SET_MATCH_SELECTIONS;
