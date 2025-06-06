@@ -14,7 +14,7 @@ SET "FSPATH=C:\Users\fores\source\repos\slippi-mainline\Binary\x64\Sys\GameFiles
 @REM -t "m-ex/MexTK/mnFunction.txt" ^
 @REM -q -ow -c -l "melee.link"
 
-@REM IN-GAME
+IN-GAME
 "m-ex/MexTK/MexTK.exe" -ff -i "Scenes/3v1/VS/Vs.c" ^
 -s mnFunction ^
 -o "%FSPATH%CustomVs.dat" ^

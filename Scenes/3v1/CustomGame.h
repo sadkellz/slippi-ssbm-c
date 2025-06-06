@@ -4,14 +4,28 @@
 #include "../../m-ex/MexTK/mex.h"
 #include <stdbool.h>
 
+// constants
 #define R13_OFFSET_ISCUSTOM -0x4DA7 // some single button mode offset, hopefully unused elsewhere
 #define CSS_CORNER_XTHRESH -20.f
 #define CSS_CORNER_YTHRESH 22.f
+#define TVO_MAX_LEVEL 5
+extern Text *text;
+    // level hud
+#define LVLHUD_ROT -0.2f
+#define LVLHUD_XOFST -3.5f
+#define LVLHUD_YOFST 8.f
+#define LVLHUD_ZOFST -1.f
+#define LVLHUD_SCALE 0.5f
+#define LVLHUD_ALPHA 0.75f
+
+// macros
 #define TVO_HAS_PLAYED(chardata, index) ((chardata)->has_played & (1 << (index)))
 #define TVO_SET_PLAYED(chardata, index) ((chardata)->has_played |= (1 << (index)))
 #define TVO_CLEAR_PLAYED(chardata, index) ((chardata)->has_played &= ~(1 << (index)))
+#define CLAMP(val, min, max) ((val) < (min) ? (min) : (val) > (max) ? (max) : (val))
 
-extern Text *text;
+// testing
+#define TVO_TESTING
 
 typedef struct MexMajorScene {
     u8 is_preload;
@@ -28,7 +42,8 @@ typedef struct TvoCharacterData {
     CharacterKind last_played;
     u8 solo_player;
     bool match_success;
-} TvoCharacterData;
+    u8 player_levels[4];
+} TvoCharacterData; // 0x3F - 63 bytes max
 
 typedef struct MatchResults {
     int x0;                           // 0x24c
@@ -53,6 +68,80 @@ typedef struct ScDataMatchExit {
     u8 unk[0x2278];
 } ScDataMatchExit;
 
+typedef struct MatchInfoRules {
+    unsigned char matchType : 3;
+    unsigned char hudPos : 3;
+    unsigned char timer : 2;
+
+    unsigned char timer_unk2 : 1;
+    unsigned char unk4 : 1;
+    unsigned char hideReady : 1;
+    unsigned char hideGo : 1;
+    unsigned char isDisableMusic : 1;
+    unsigned char unk3 : 1;
+    unsigned char timer_unk : 1;
+    unsigned char unk2 : 1;
+
+    unsigned char unk9 : 1;
+    unsigned char disableOffscreenDamage : 1;
+    unsigned char unk8 : 1;
+    unsigned char isSingleButtonMode : 1;
+    unsigned char isDisablePause : 1;
+    unsigned char unk7 : 1;
+    unsigned char isCreateHUD : 1;
+    unsigned char unk5 : 1;
+
+    unsigned char isShowScore : 1;        // 0x80
+    unsigned char isShowAnalogStick : 1;  // 0x40
+    unsigned char isCheckForZRetry : 1;   // 0x20
+    unsigned char isShowZRetry : 1;       // 0x10
+    unsigned char isCheckForLRAStart : 1; // 0x08
+    unsigned char isShowLRAStart : 1;     // 0x04
+    unsigned char isHidePauseHUD : 1;     // 0x02
+    unsigned char timerRunOnPause : 1;    // 0x01
+    unsigned char unk11 : 1;             // 0x80
+    unsigned char isCheckStockSteal : 1; // 0x40
+    unsigned char isRunStockLogic : 1;   // 0x20
+    unsigned char unk1f : 5;             // 0x1f
+    unsigned char no_check_end : 1;        // 0x80
+    unsigned char isSkipUnkStockCheck : 1; // 0x40
+    unsigned char no_hit : 1;              // 0x20
+    unsigned char unk12 : 5;               // 0x01
+    u8 bombRain; // 0xFF
+    u8 match_end_gfx_type; // 0xFF
+    bool is_teams; // 0xFF
+    u8 use_ko_count; // 0xFF
+    u8 unk_alt_music; // 0xFF
+    s8 itemFreq; // 0xFF
+    u8 sd_penalty; // 0xFF
+    u8 unk16; // 0xFF
+    u16 stage; // 0xFFFF
+    int timerSeconds : 32; // 0xFFFFFFFF
+    u8 timerSubSeconds; // 0xFF
+    int unk17; // 0xFFFFFFFF
+    unsigned long long itemSwitch : 64; // 0xFFFFFFFF FFFFFFFF
+    int unk18; // 0xFFFFFFFF
+    float quake_mult;
+    float dmg_ratio;
+    float match_speed;
+    int x34;
+    int x38;
+    void *x3C_pause_cb;
+    void *onStartMelee;
+    void *onMatchFrame1;
+    void *onMatchFrame2;
+    void *onMatchEnd;
+    bool x50_is_singleplayer;
+    void *onCheckPause;
+    int x58;
+} MatchInfoRules;
+
+typedef struct MatchInfoBlock {
+    // u8 rules[0x60];
+    MatchInfoRules rules;
+    PlayerData player_data[6];
+} MatchInfoBlock;
+
 bool IsCustomMode() {
     return R13_U8(R13_OFFSET_ISCUSTOM);
 }
@@ -61,32 +150,36 @@ bool IsCustomMode() {
 u8 *stc_match_result = (u8 *)0x8046b6a8; // accessing this from stc_match doesnt work? its 2 bytes off?
 TvoCharacterData *stc_tvo_characters = (TvoCharacterData *)0x803eadc8; // this is some debug strings for camera screenshot // size 0x3F
 
-void Tvo_GetSoloPlayer(MatchInit data) {
+void (*HUD_AddAnimsByCharIndex)(JOBJ *jobj, int anim_idx, void *joint_anim, void *mat_anim, void *shape_anim) = (void *) 0x8000c07c;
+
+void Tvo_GetSoloPlayer(MatchInfoBlock *data) {
     u8 team_counts[4] = {0};
     u8 team_players[4] = {0};
-    u8 solo_player;
+    int unique_teams = 0;
 
     for (int i = 0; i < 4; i++) {
-        u8 team = data.playerData[i].team;
-            team_counts[team]++;
-            team_players[team] = i;
-
-        // OSReport("player %d team %d\n", i, team);
+        u8 team = data->player_data[i].team;
+        if (team_counts[team] == 0)
+            unique_teams++;
+        team_counts[team]++;
+        team_players[team] = i;
     }
 
-    // Check for teams with only one player
+    if (unique_teams > 2) {
+        stc_tvo_characters->solo_player = 255;
+        return;
+    }
+
     for (int t = 0; t < 4; t++) {
         if (team_counts[t] == 1) {
-            solo_player = team_players[t];
-            stc_tvo_characters->solo_player = solo_player;
-            // OSReport("Team %d has only player %d\n", t, solo_player);
-        }
-        if (team_counts[t] == 2) {
-            stc_tvo_characters->solo_player = 6;
-            // OSReport("No solo player found\n");
+            stc_tvo_characters->solo_player = team_players[t];
+            return;
         }
     }
+
+    stc_tvo_characters->solo_player = 255;
 }
+
 
 bool Tvo_WasMatchSuccessful(ScDataMatchExit *data) {
     u8 result = *stc_match_result;
@@ -109,15 +202,20 @@ void Tvo_DataInit() {
 
 void Tvo_GetCharacter(CharacterKind last_played, CharacterKind *kind_out) {
 
-    if (kind_out == (void *)0) {
-        OSReport("null kind\n");
-        return;
-    }
+    // if (kind_out == (void *)0) {
+    //     OSReport("null kind\n");
+    //     return;
+    // }
 
     // exit early if desync/quit out
-    if (!stc_tvo_characters->match_success) {
-        *kind_out = last_played;
-        return;
+    if (!stc_tvo_characters->match_success && (int)last_played != -1) {
+        // check if last played is valid
+        if (last_played > 0) {
+            OSReport("Last Played: %d\n", last_played);
+            *kind_out = last_played;
+            return;
+        }
+        // if this is the first match, just resume?
     }
 
     // First character selection
@@ -146,7 +244,7 @@ void Tvo_GetCharacter(CharacterKind last_played, CharacterKind *kind_out) {
 }
 
 void Tvo_GetStage(u8 *stage_out) {
-    GrExternal stage_list[] = {
+    enum GrExternal stage_list[] = {
         GRKINDEXT_IZUMI, GRKINDEXT_PSTAD, GRKINDEXT_STORY,
         GRKINDEXT_BATTLE, GRKINDEXT_FD, GRKINDEXT_OLDPU 
     };
@@ -154,6 +252,86 @@ void Tvo_GetStage(u8 *stage_out) {
     const int stage_count = sizeof(stage_list) / sizeof(stage_list[0]);
     int random_idx = HSD_Randi(stage_count);
     *stage_out = stage_list[random_idx];
+}
+
+void Tvo_SetPlayerLevels() {
+	if(stc_tvo_characters->match_success) {
+		for (int i = 0; i < 4; i++) {
+			// dont run on solo player
+            if (i != stc_tvo_characters->solo_player) {
+                int stocks = Fighter_GetStocks(i);
+                if (stocks <= 0) {
+                    if (stc_tvo_characters->player_levels[i] > 0)
+                        stc_tvo_characters->player_levels[i]--;
+                }
+                else {
+                    if (stc_tvo_characters->player_levels[i] < TVO_MAX_LEVEL)
+                        stc_tvo_characters->player_levels[i]++;
+                }
+            }
+            
+			OSReport("player %d level %d\n", i, stc_tvo_characters->player_levels[i]);
+            
+		}
+	}
+}
+
+void Tvo_LoadLevelHud() {
+    JOBJSet **dmg_num;
+
+    // load damage number set
+    Archive_GetSections(*stc_ifall_archive, &dmg_num, "DmgNum_scene_models", 0);
+    GOBJ *dmg_gobj = JOBJ_LoadSet(
+        0, 
+        *dmg_num, 
+        0, 
+        0.f, 
+        14, 
+        11, 
+        0, 
+        0);
+    
+    
+    JOBJ *dmg_jobj = (JOBJ *)dmg_gobj->hsd_object;
+    
+    // add our animations
+    HUD_AddAnimsByCharIndex(dmg_jobj, 0, (*dmg_num)->animjoint, (*dmg_num)->matanimjoint, (*dmg_num)->shapeaninjoint);
+
+    // get our individual damage numbers so we can modify them
+    JOBJ *numbers[4];
+    JOBJ_GetChild(dmg_jobj, &numbers[0], 1, -1);
+    JOBJ_GetChild(dmg_jobj, &numbers[1], 2, -1);
+    JOBJ_GetChild(dmg_jobj, &numbers[2], 3, -1);
+    JOBJ_GetChild(dmg_jobj, &numbers[3], 4, -1);
+
+    // disable "%"
+    JOBJ_SetFlags(numbers[3], JOBJ_HIDDEN);
+
+    // animate the numbers to our levels
+    for (int i = 0, j = 0; i < 4; i++) {
+        if (i == stc_tvo_characters->solo_player)
+            continue;
+
+        u8 level_index = stc_tvo_characters->player_levels[i];
+        float frame = level_index * 2.0f;
+
+        // animate
+        JOBJ_ForEachAnim(numbers[j], 0x6, 0x400, AOBJ_ReqAnim, 1, frame);
+        JOBJ_AnimAll(numbers[j]);
+        JOBJ_ForEachAnim(numbers[j], 0x6, 0x400, AOBJ_StopAnim, 6, 0, 0);
+
+        // set position, rotation, and alpha
+        Vec3 *pos;
+        pos = Match_GetPlayerHUDPos(i);
+        numbers[j]->trans = (Vec3){ pos->X + LVLHUD_XOFST, pos->Y + LVLHUD_YOFST, pos->Z};
+        numbers[j]->scale = (Vec3){LVLHUD_SCALE, LVLHUD_SCALE, LVLHUD_SCALE};
+        numbers[j]->rot.Z = LVLHUD_ROT;
+        numbers[j]->dobj->mobj->mat->alpha = 0.75f;
+        
+        // increment joint num
+        j++;
+    }
+
 }
 
 #endif

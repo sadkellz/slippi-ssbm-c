@@ -11,6 +11,7 @@ typedef enum ExiSlippi_Command {
   ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
   ExiSlippi_Command_REPORT_SET_COMPLETE = 0xC2,
   ExiSlippi_Command_GET_PLAYER_SETTINGS = 0xC3,
+  ExiSlippi_Command_SET_MATCH_SETTINGS = 0xC4,
 } ExiSlippi_Command;
 
 typedef enum ExiSlippi_TransferMode {
@@ -46,7 +47,7 @@ typedef struct ExiSlippi_SetSelections_Query {
   u8 char_option;
   u16 stage_id;
   u8 stage_option;
-  u8 online_mode;
+  u8 online_mode; // custom match
 } ExiSlippi_SetSelections_Query;
 
 typedef struct ExiSlippi_OverwriteCharSelections {
@@ -133,6 +134,11 @@ typedef struct PlayerSettings {
 typedef struct ExiSlippi_GetPlayerSettings_Response {
   PlayerSettings settings[4];
 } ExiSlippi_GetPlayerSettings_Response;
+
+typedef struct ExiSlippi_SetMatchSettings {
+  u8 command;
+  u8 game_info_block[0x138];
+} ExiSlippi_SetMatchSettings;
 
 // Not sure if resetting is strictly needed, might be contained to the file
 #pragma pack()

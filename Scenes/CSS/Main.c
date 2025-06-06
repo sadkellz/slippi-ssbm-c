@@ -44,9 +44,10 @@ void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id,
     ssq->char_option = char_option;
     ssq->stage_id = stage_id;
     ssq->stage_option = stage_option;
-    ssq->online_mode = -1;  // 0 is Ranked. Doesn't actually do anything in Dolphin atm
+    ssq->online_mode = 1;  // custom match
     ExiSlippi_Transfer(ssq, sizeof(ExiSlippi_SetSelections_Query), ExiSlippi_TransferMode_WRITE);
     HSD_Free(ssq);
+    // OSReport("SetMatchSelections\n");
 }
 
 
@@ -61,9 +62,9 @@ void SetupCustomCSS() {
 	text->trans = (Vec3){0.f, -20.f, 0.f};
 	text->scale = (Vec2){0.08f, 0.08f};
 	text->color = color;
-	// text->viewport_color = color2;
-	// text->aspect = (Vec2){640.f, 60.f};
 	int header = Text_AddSubtext(text, -80.0f, -44.0f, "3v1 IRON MAN");
+
+    // credit text
 	int copyright = Text_AddSubtext(text, 250.0f, 540.f, copy_text);
     Text_SetScale(text, copyright, 0.5f, 0.5f);
     Text_SetColor(text, copyright, &green);
@@ -71,13 +72,16 @@ void SetupCustomCSS() {
 
 void CheckForModeSwitch() {
     Vec2 puck_pos;
-    puck_pos = stc_css_cursors[*stc_css_singeplyport]->pos;
+    puck_pos = stc_css_cursors[*stc_css_hmnport]->pos;
     bool is_custom_mode = R13_U8(R13_OFFSET_ISCUSTOM);
     if (IsOnCSSNameEntryScreen()) { text = NULL;}
 
-    if (puck_pos.X < CSS_CORNER_XTHRESH && puck_pos.Y > CSS_CORNER_YTHRESH) {
+    // OSReport("hmn port: %d\n", *stc_css_hmnport);
+
+    if (is_custom_mode) {
+    // if (puck_pos.X < CSS_CORNER_XTHRESH && puck_pos.Y > CSS_CORNER_YTHRESH) {
         // OSReport("pos: %f, %f\n", puck_pos.X, puck_pos.Y);
-        HSD_Pad* pad = PadGet(*stc_css_singeplyport, PADGET_ENGINE);
+        HSD_Pad* pad = PadGet(*stc_css_hmnport, PADGET_ENGINE);
         if (pad->down & PAD_BUTTON_A) {
             // switch mode
             
@@ -93,10 +97,16 @@ void CheckForModeSwitch() {
                 text = NULL;
             }
         }
+
+        if (pad->down & PAD_BUTTON_X) {
+            // SendOutgoingChatCommand(2);
+            // SetMatchSelections(0, 0, 1, 0, 0, 0);
+        }
     }
 
     if (is_custom_mode && !text && !IsOnCSSNameEntryScreen()) {
         SetupCustomCSS();
+        
     }
 }
 
