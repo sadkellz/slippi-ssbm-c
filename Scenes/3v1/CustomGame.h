@@ -317,6 +317,13 @@ void Tvo_LoadLevelHud() {
             continue;
 
         u8 level_index = stc_tvo_characters->player_levels[i];
+        
+        if (level_index == 0) {
+            JOBJ_SetFlagsAll(numbers[j], JOBJ_HIDDEN);
+            j++;
+            continue;
+        }
+
         float frame = level_index * 2.0f;
 
         // animate
