@@ -2,6 +2,7 @@
 #define SLIPPI_CUSTOM_H
 
 #include "../../m-ex/MexTK/mex.h"
+#include "../../Common.h"
 #include <stdbool.h>
 
 // constants
@@ -151,6 +152,9 @@ u8 *stc_match_result = (u8 *)0x8046b6a8; // accessing this from stc_match doesnt
 TvoCharacterData *stc_tvo_characters = (TvoCharacterData *)0x803eadc8; // this is some debug strings for camera screenshot // size 0x3F
 
 void (*HUD_AddAnimsByCharIndex)(JOBJ *jobj, int anim_idx, void *joint_anim, void *mat_anim, void *shape_anim) = (void *) 0x8000c07c;
+u32 (*CKindToId)(int id, int secondary) = (void *) 0x800325c8;
+void (*TOBJ_Setup)(TOBJ *tobj) = (void *) 0x80360950;
+void (*MOBJ_Setup)(MOBJ *mobj) = (void *) 0x80363a24;
 
 void Tvo_GetSoloPlayer(MatchInfoBlock *data) {
     u8 team_counts[4] = {0};
@@ -327,11 +331,83 @@ void Tvo_LoadLevelHud() {
         numbers[j]->scale = (Vec3){LVLHUD_SCALE, LVLHUD_SCALE, LVLHUD_SCALE};
         numbers[j]->rot.Z = LVLHUD_ROT;
         numbers[j]->dobj->mobj->mat->alpha = 0.75f;
-        
+
         // increment joint num
         j++;
     }
 
 }
+
+void Tvo_Player_ApplyHitstunMod(GOBJ *fighter) {
+    float level_scale[6] = {1.f, 1.15f, 1.35f, 1.75f, 2.5f, 3.f};
+    FighterData *ft_data = (FighterData*)fighter->userdata;
+    int slot = ft_data->ply;
+    int level = stc_tvo_characters->player_levels[slot];
+
+    // check if we are the solo player
+    if (stc_tvo_characters->solo_player == slot)
+        return;
+
+    // apply hitstun multiplier
+    ft_data->dmg.behavior = level_scale[level];
+    return;
+}
+
+static inline void SetupIcon(JOBJ *icon_jobj, GXColor color) {
+    DOBJ *bg_dobj   = icon_jobj->dobj;
+    DOBJ *char_dobj = icon_jobj->dobj->next;
+
+    // reorder so bg is drawn after char
+    bg_dobj->next   = 0x0;
+    icon_jobj->dobj = char_dobj;
+    char_dobj->next = bg_dobj;
+
+    bg_dobj->mobj->mat->diffuse = color;
+    bg_dobj->mobj->mat->ambient = color;
+    bg_dobj->mobj->mat->alpha   = 0.5f;
+
+    bg_dobj->mobj->tobj->blending   = 0.f;
+    bg_dobj->mobj->tobj->scale      = (Vec3){1.f, 60.f, 1.f};
+    bg_dobj->mobj->tobj->magFilt    = 0;
+    bg_dobj->mobj->tobj->translate  = (Vec3){0.f, 8.5f, 0.f};
+
+    JOBJ_ForEachAnim(icon_jobj, 0x6, 0x400, AOBJ_ReqAnim, 1, 13.f);
+    JOBJ_AnimAll(icon_jobj);
+    JOBJ_ForEachAnim(icon_jobj, 0x6, 0x400, AOBJ_StopAnim, 6, 0, 0);
+    JOBJ_RemoveAnimAll(icon_jobj);
+}
+
+void Tvo_Css_SetIcons() {
+    JOBJ *menu_jobj = (JOBJ*)(*stc_css_menugobj)->hsd_object;
+    GXColor RED    = (GXColor){255, 0, 0, 255};
+    GXColor ORANGE = (GXColor){255, 128, 0, 255};
+
+    // zelda/sheik logic
+    bool played_zelda = TVO_HAS_PLAYED(stc_tvo_characters, 0x12);
+    bool played_sheik = TVO_HAS_PLAYED(stc_tvo_characters, 0x13);
+
+    // iterate through the css icons, skipping zelda
+    for (int i = 0; i < 25; i++) {
+        if (i == 15) continue;
+
+        MnSlChrIcon icon = stc_css_data->icons[i];
+        if (!TVO_HAS_PLAYED(stc_tvo_characters, icon.c_kind)) continue;
+
+        JOBJ *icon_jobj;
+        JOBJ_GetChild(menu_jobj, &icon_jobj, icon.joint_id_1p, -1);
+        SetupIcon(icon_jobj, RED);
+    }
+
+    // Zelda and Sheik
+    if (played_zelda || played_sheik) {
+        JOBJ *icon_jobj;
+        MnSlChrIcon icon = stc_css_data->icons[15];
+        JOBJ_GetChild(menu_jobj, &icon_jobj, icon.joint_id_1p, -1);
+
+        GXColor color = (played_zelda && played_sheik) ? RED : ORANGE;
+        SetupIcon(icon_jobj, color);
+    }
+}
+
 
 #endif

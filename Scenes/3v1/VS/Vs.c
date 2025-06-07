@@ -14,12 +14,6 @@ void minor_think() {
 				Match_EndImmediate();
 				return;
 			}
-
-			// for (int i = 0; i < 4; i++) {
-			// 	if (i != stc_tvo_characters->solo_player) {
-			// 		Fighter_SetStocks(i, 1);
-			// 	}
-			// }
 		}
 	}
 
@@ -28,9 +22,16 @@ void minor_think() {
 }
 
 void minor_load(MatchInit* minor_data) {
+	// original code
 	VS_Load(minor_data);
 
 	Tvo_LoadLevelHud();
+	// create our player procs
+	for (int i = 0; i < 4; i++) {
+		GOBJ *fighter = Fighter_GetGObj(i);
+		GObj_AddProc(fighter, Tvo_Player_ApplyHitstunMod, 13);
+	}
+
 	return;
 }
 
@@ -55,9 +56,10 @@ void minor_exit(ScDataMatchExit* minor_data) {
 	// set our levels
 	Tvo_SetPlayerLevels();
 
+	// original code
 	VS_Exit(minor_data);
-
-
+	// TVO_SET_PLAYED(stc_tvo_characters, 18);
+	// TVO_SET_PLAYED(stc_tvo_characters, 19);
 	return;
 }
 

@@ -48,9 +48,6 @@ void minor_think() {
             R13_U8(R13_OFFSET_ISWINNER) = 1;
             R13_U8(R13_OFFSET_CHOSESTAGE) = 1;
 
-            // init our 3v1 character data
-            Tvo_DataInit();
-
             // we run most of the setup after we're locked in
             if (css_data->prevLockInState) {
                 stage_id = 0x1F; // battlefield default
@@ -71,26 +68,8 @@ void minor_think() {
                 
                 OSReport("team: %d, color: %d\n", team, color);
 
-                SetMatchSelections(c_kind, team, 1, stage_id, stage_option, team);
-
-                // ExiSlippi_MatchState_Response *msrb = calloc(sizeof(ExiSlippi_MatchState_Response));
-                // ExiSlippi_LoadMatchState(msrb);
-                // MatchInfoBlock* match_block = (MatchInfoBlock*)msrb->game_info_block;
-                // // match_block->player_data[0].stocks = 8;
-                
-                // // default rules
-                // memcpy(&match_block->rules, &default_rules, 0x60);
-
-                // // modify the ruleset for 3v1
-                // match_block->rules.is_teams = true;
-
-                // // transfer our custom match settings
-                // ExiSlippi_SetMatchSettings *cms = calloc(sizeof(ExiSlippi_SetMatchSettings));
-                // cms->command = ExiSlippi_Command_SET_MATCH_SETTINGS;
-                // memcpy(cms->game_info_block, match_block, 312);
-                // ExiSlippi_Transfer(cms, 312, ExiSlippi_TransferMode_WRITE);
+                SetMatchSelections(0x12, team, 1, stage_id, stage_option, team);
                 is_init = true;
-
                 return;
             }
         }
@@ -105,13 +84,12 @@ void minor_load(VSMinorData *minor_data) {
     CSS_load();
     InitOnlineCSS();
 
-    // check if teams
-    if (R13_U8(R13_OFFSET_ONLINE_MODE) == 3) {
-        is_teams = true;
-    }
-    else {
-        is_teams = false;
-    }
+
+    // init our 3v1 character data
+    Tvo_DataInit();
+
+    // set up the css icons to show who weve played
+    Tvo_Css_SetIcons();
 
     // OSReport("CSS_load\n");
     return;

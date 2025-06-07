@@ -31,6 +31,36 @@ void JOBJ_SetAllAlpha(JOBJ *jobj, float alpha) {
     JOBJ_SetAllAlpha(jobj->sibling, alpha);
 }
 
+void JOBJ_SetAllDiffuse(JOBJ *jobj, GXColor diffuse) {
+
+    if (!jobj) return;
+
+    DOBJ *dobj = jobj->dobj;
+    while (dobj) {
+        if (dobj->mobj && dobj->mobj->mat)
+            dobj->mobj->mat->diffuse = diffuse;
+        dobj = dobj->next;
+    }
+
+    JOBJ_SetAllDiffuse(jobj->child, diffuse);
+    JOBJ_SetAllDiffuse(jobj->sibling, diffuse);
+}
+
+void JOBJ_SetAllAmbient(JOBJ *jobj, GXColor ambient) {
+
+    if (!jobj) return;
+
+    DOBJ *dobj = jobj->dobj;
+    while (dobj) {
+        if (dobj->mobj && dobj->mobj->mat)
+            dobj->mobj->mat->diffuse = ambient;
+        dobj = dobj->next;
+    }
+
+    JOBJ_SetAllAmbient(jobj->child, ambient);
+    JOBJ_SetAllAmbient(jobj->sibling, ambient);
+}
+
 void JOBJ_SetMatFrame(JOBJ* jobj, float frame) {
 JOBJ_ForEachAnim(jobj, 0x6, 0x400, AOBJ_ReqAnim, 1, frame);
 JOBJ_AnimAll(jobj);
