@@ -257,14 +257,14 @@ void Tvo_GetCharacter(CharacterKind last_played, CharacterKind *kind_out) {
     }
 }
 
-void Tvo_GetStage(u8 *stage_out) {
+void Tvo_GetStage(u16 *stage_out) {
     enum GrExternal stage_list[] = {
         GRKINDEXT_IZUMI, GRKINDEXT_PSTAD, GRKINDEXT_STORY,
         GRKINDEXT_BATTLE, GRKINDEXT_FD, GRKINDEXT_OLDPU 
     };
 
     const int stage_count = sizeof(stage_list) / sizeof(stage_list[0]);
-    int random_idx = HSD_Randi(stage_count);
+    u16 random_idx = HSD_Randi(stage_count);
     *stage_out = stage_list[random_idx];
 }
 

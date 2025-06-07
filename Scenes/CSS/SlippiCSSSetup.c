@@ -19,6 +19,7 @@ static u32 default_rules[] = {
 
 static bool is_init = false;
 Text *text;
+u16 stage;
 
 //Runs every frame during CSS
 void minor_think() {
@@ -30,7 +31,6 @@ void minor_think() {
         SlippiCSSDataTable *css_data;
         CharacterKind c_kind;
         CharacterKind last_played = stc_tvo_characters->last_played;
-        u8 stage_id;
         u8 team;
         u8 color;
 
@@ -43,14 +43,12 @@ void minor_think() {
 
         // we run most of the setup after we're locked in
         if (css_data->prevLockInState) {
-            stage_id = 0x1F; // battlefield default
-            bool stage_option = false;
+            stage = 0x1F; // battlefield default
             
             // get stage
-            if (css_data->msrb->localName == css_data->msrb->p1Name) {
-                Tvo_GetStage(&stage_id);
-                stage_option = true;
-            }
+            Tvo_GetStage(&stage);
+            // OSReport("stage_id: %d\n", stage);
+            
 
             // getting character
             if (stc_tvo_characters->char_remaining != 0) {
@@ -66,7 +64,7 @@ void minor_think() {
             
             OSReport("team: %d, color: %d\n", team, color);
 
-            SetMatchSelections(c_kind, team, 1, stage_id, stage_option, team);
+            SetMatchSelections(c_kind, team, 1, stage, 1, team);
             is_init = true;
             return;
         }
@@ -106,6 +104,7 @@ void minor_exit(VSMinorData *minor_data) {
 
     // modify the ruleset for 3v1
     match_block->rules.is_teams = true;
+    match_block->rules.stage = stage;
 
     // each person has to set the character in-case they arent "host"
     for (int i = 0; i < 4; i++) {
