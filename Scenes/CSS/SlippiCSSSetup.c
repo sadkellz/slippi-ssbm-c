@@ -51,9 +51,14 @@ void minor_think() {
                 Tvo_GetStage(&stage_id);
                 stage_option = true;
             }
-            
+
             // getting character
-            Tvo_GetCharacter(last_played, &c_kind);
+            if (stc_tvo_characters->char_remaining != 0) {
+                Tvo_GetCharacter(last_played, &c_kind);
+            }
+            else {
+                c_kind = TVO_NOCHAR;
+            }
 
             // override match selections
             team = css_data->teamIndex - 1;
@@ -73,11 +78,9 @@ void minor_load(VSMinorData *minor_data) {
     CSS_load();
     InitOnlineCSS();
 
-
     // init our 3v1 character data
     Tvo_DataInit();
-
-    // set up the css icons to show who weve played
+    Tvo_GetCharactersRemaining();
     Tvo_Css_SetIcons();
 
     // OSReport("CSS_load\n");
@@ -86,6 +89,8 @@ void minor_load(VSMinorData *minor_data) {
 
 //Runs when leaving CSS
 void minor_exit(VSMinorData *minor_data) {
+    SlippiOnlineDataBuffer *odb = R13_PTR(R13_OFFSET_ODB_ADDR);
+    u8 local_slot = odb->local_player_idx;
 
     // debug match selections
     // for (int i = 0; i < 26; i++) {
@@ -95,13 +100,19 @@ void minor_exit(VSMinorData *minor_data) {
     ExiSlippi_MatchState_Response *msrb = calloc(sizeof(ExiSlippi_MatchState_Response));
     ExiSlippi_LoadMatchState(msrb);
     MatchInfoBlock* match_block = (MatchInfoBlock*)msrb->game_info_block;
-    // match_block->player_data[0].stocks = 8;
     
     // default rules
     memcpy(&match_block->rules, &default_rules, 0x60);
 
     // modify the ruleset for 3v1
     match_block->rules.is_teams = true;
+
+    // each person has to set the character in-case they arent "host"
+    for (int i = 0; i < 4; i++) {
+        if (match_block->player_data[i].c_kind == TVO_NOCHAR) {
+            match_block->player_data[i].p_kind = 3;
+        }
+    }
 
     // stock logic
     // currently its still up to the players to set their correct team
@@ -118,12 +129,6 @@ void minor_exit(VSMinorData *minor_data) {
                 match_block->player_data[i].stocks = 1;
             }
         }
-        
-        #ifdef TVO_TESTING
-            for (int i = 0; i < 4; i++) {
-                    match_block->player_data[i].stocks = 1;
-                }
-        #endif
     }
 
     // transfer our custom match settings

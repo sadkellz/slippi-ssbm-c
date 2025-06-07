@@ -46,8 +46,8 @@ void minor_exit(ScDataMatchExit* minor_data) {
 
 	// set our last played
 	stc_tvo_characters->last_played = ckind;
-	OSReport("last played: %d\n", ckind);
-	OSReport("stocks: %d\n", stocks);
+	// OSReport("last played: %d\n", ckind);
+	// OSReport("stocks: %d\n", stocks);
 
 	if(stc_tvo_characters->match_success) {
 		// move onto the next characer if we ran out of stocks

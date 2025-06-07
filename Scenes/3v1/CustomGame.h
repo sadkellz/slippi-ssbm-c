@@ -10,6 +10,9 @@
 #define CSS_CORNER_XTHRESH -20.f
 #define CSS_CORNER_YTHRESH 22.f
 #define TVO_MAX_LEVEL 5
+#define TVO_CHAR_COUNT 26
+#define TVO_NOCHAR 0x20
+
 extern Text *text;
     // level hud
 #define LVLHUD_ROT -0.2f
@@ -30,15 +33,15 @@ extern Text *text;
 
 
 // Structs
-typedef struct MexMajorScene {
-    u8 is_preload;
-    u8 major_id;
-    void *onLoad;
-    void *onExit;
-    void *onBoot;
-    void *MinorScene; // array of minor scenes
-    int x40;
-} MexMajorScene;
+// typedef struct MexMajorScene {
+//     u8 is_preload;
+//     u8 major_id;
+//     void *onLoad;
+//     void *onExit;
+//     void *onBoot;
+//     void *MinorScene; // array of minor scenes
+//     int x40;
+// } MexMajorScene;
 
 typedef struct TvoCharacterData {
     u32 has_played; 
@@ -46,6 +49,7 @@ typedef struct TvoCharacterData {
     u8 solo_player;
     bool match_success;
     u8 player_levels[4];
+    u8 char_remaining;
 } TvoCharacterData; // 0x3F - 63 bytes max
 
 typedef struct MatchResults {
@@ -205,6 +209,17 @@ void Tvo_DataInit() {
     } 
 }
 
+void Tvo_GetCharactersRemaining() {
+    int char_count = 0;
+    for (int i = 0; i < TVO_CHAR_COUNT; i++) {
+        if (TVO_HAS_PLAYED(stc_tvo_characters, i))
+        {
+            char_count++;
+        }
+    }
+    stc_tvo_characters->char_remaining = TVO_CHAR_COUNT - char_count;
+}
+
 void Tvo_GetCharacter(CharacterKind last_played, CharacterKind *kind_out) {
 
     // exit early if desync/quit out
@@ -229,10 +244,9 @@ void Tvo_GetCharacter(CharacterKind last_played, CharacterKind *kind_out) {
     if (TVO_HAS_PLAYED(stc_tvo_characters, last_played)) {
         CharacterKind new_kind;
         do {
-            new_kind = (CharacterKind)HSD_Randi(26);
+            new_kind = (CharacterKind)HSD_Randi(TVO_CHAR_COUNT);
             // Ensure we don't pick the same character we just lost with
         } while (new_kind == last_played && TVO_HAS_PLAYED(stc_tvo_characters, new_kind));
-        
         *kind_out = new_kind;
         OSReport("Lost with char %d, switching to %d\n", last_played, *kind_out);
     }
