@@ -403,8 +403,15 @@ void Tvo_Css_SetIcons() {
         JOBJ *icon_jobj;
         MnSlChrIcon icon = stc_css_data->icons[15];
         JOBJ_GetChild(menu_jobj, &icon_jobj, icon.joint_id_1p, -1);
+        GXColor color;
 
-        GXColor color = (played_zelda && played_sheik) ? RED : ORANGE;
+        if (played_zelda && played_sheik) {
+            color = RED;
+        }
+        else if (played_zelda || played_sheik) {
+            color = ORANGE;
+        }
+        
         SetupIcon(icon_jobj, color);
     }
 }
