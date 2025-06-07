@@ -70,43 +70,11 @@ void SetupCustomCSS() {
     Text_SetColor(text, copyright, &green);
 }
 
-void CheckForModeSwitch() {
-    Vec2 puck_pos;
-    puck_pos = stc_css_cursors[*stc_css_hmnport]->pos;
-    bool is_custom_mode = R13_U8(R13_OFFSET_ISCUSTOM);
+void CheckToDrawText() {
     if (IsOnCSSNameEntryScreen()) { text = NULL;}
 
-    // OSReport("hmn port: %d\n", *stc_css_hmnport);
-
-    if (is_custom_mode) {
-    // if (puck_pos.X < CSS_CORNER_XTHRESH && puck_pos.Y > CSS_CORNER_YTHRESH) {
-        // OSReport("pos: %f, %f\n", puck_pos.X, puck_pos.Y);
-        HSD_Pad* pad = PadGet(*stc_css_hmnport, PADGET_ENGINE);
-        if (pad->down & PAD_BUTTON_A) {
-            // switch mode
-            
-            is_custom_mode = !is_custom_mode;
-            R13_U8(R13_OFFSET_ISCUSTOM) = is_custom_mode;
-
-            if (is_custom_mode) {
-                SetupCustomCSS();
-            }
-            else {
-                Text_Destroy(text);
-                Text_DestroyAllAlloc(text);
-                text = NULL;
-            }
-        }
-
-        if (pad->down & PAD_BUTTON_X) {
-            // SendOutgoingChatCommand(2);
-            // SetMatchSelections(0, 0, 1, 0, 0, 0);
-        }
-    }
-
-    if (is_custom_mode && !text && !IsOnCSSNameEntryScreen()) {
+    if (!text && !IsOnCSSNameEntryScreen()) {
         SetupCustomCSS();
-        
     }
 }
 

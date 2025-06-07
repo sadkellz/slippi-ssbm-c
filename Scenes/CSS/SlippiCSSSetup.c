@@ -17,7 +17,6 @@ static u32 default_rules[] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
 };
 
-static bool is_teams;
 static bool is_init = false;
 Text *text;
 
@@ -27,56 +26,46 @@ void minor_think() {
     UpdateOnlineCSS();
 
     // 3v1
-    // if (is_teams && !is_init) {
     if (!is_init) {
         SlippiCSSDataTable *css_data;
+        CharacterKind c_kind;
+        CharacterKind last_played = stc_tvo_characters->last_played;
+        u8 stage_id;
+        u8 team;
+        u8 color;
+
         css_data = GetSlpCSSDT();
+        CheckToDrawText();
 
-        // check if we've clicked the top left corner
-        R13_U8(R13_OFFSET_ISCUSTOM) = true;
-        CheckForModeSwitch();
-        
-        if (IsCustomMode()) {
+        // this lets us skip the stage select, also has to be set before we've locked in
+        R13_U8(R13_OFFSET_ISWINNER) = 1;
+        R13_U8(R13_OFFSET_CHOSESTAGE) = 1;
+
+        // we run most of the setup after we're locked in
+        if (css_data->prevLockInState) {
+            stage_id = 0x1F; // battlefield default
+            bool stage_option = false;
             
-            CharacterKind c_kind;
-            CharacterKind last_played = stc_tvo_characters->last_played;
-            u8 stage_id;
-            u8 team;
-            u8 color;
-
-            // this lets us skip the stage select, also has to be set before we've locked in
-            R13_U8(R13_OFFSET_ISWINNER) = 1;
-            R13_U8(R13_OFFSET_CHOSESTAGE) = 1;
-
-            // we run most of the setup after we're locked in
-            if (css_data->prevLockInState) {
-                stage_id = 0x1F; // battlefield default
-                bool stage_option = false;
-                
-                // get stage
-                if (css_data->msrb->localName == css_data->msrb->p1Name) {
-                    Tvo_GetStage(&stage_id);
-                    stage_option = true;
-                }
-                
-                // getting character
-                Tvo_GetCharacter(last_played, &c_kind);
-
-                // override match selections
-                team = css_data->teamIndex - 1;
-                color = css_data->teamCostumeIndex - 1;
-                
-                OSReport("team: %d, color: %d\n", team, color);
-
-                SetMatchSelections(0x12, team, 1, stage_id, stage_option, team);
-                is_init = true;
-                return;
+            // get stage
+            if (css_data->msrb->localName == css_data->msrb->p1Name) {
+                Tvo_GetStage(&stage_id);
+                stage_option = true;
             }
-        }
+            
+            // getting character
+            Tvo_GetCharacter(last_played, &c_kind);
 
-        return;
+            // override match selections
+            team = css_data->teamIndex - 1;
+            color = css_data->teamCostumeIndex - 1;
+            
+            OSReport("team: %d, color: %d\n", team, color);
+
+            SetMatchSelections(c_kind, team, 1, stage_id, stage_option, team);
+            is_init = true;
+            return;
+        }
     }
-    return;
 }
 
 //Runs when CSS is loaded

@@ -28,6 +28,8 @@ extern Text *text;
 // testing
 #define TVO_TESTING
 
+
+// Structs
 typedef struct MexMajorScene {
     u8 is_preload;
     u8 major_id;
@@ -138,15 +140,11 @@ typedef struct MatchInfoRules {
 } MatchInfoRules;
 
 typedef struct MatchInfoBlock {
-    // u8 rules[0x60];
     MatchInfoRules rules;
     PlayerData player_data[6];
 } MatchInfoBlock;
 
-bool IsCustomMode() {
-    return R13_U8(R13_OFFSET_ISCUSTOM);
-}
-
+// static melee pointers
 // int *css = (int *)0x80479D60;
 u8 *stc_match_result = (u8 *)0x8046b6a8; // accessing this from stc_match doesnt work? its 2 bytes off?
 TvoCharacterData *stc_tvo_characters = (TvoCharacterData *)0x803eadc8; // this is some debug strings for camera screenshot // size 0x3F
@@ -155,6 +153,9 @@ void (*HUD_AddAnimsByCharIndex)(JOBJ *jobj, int anim_idx, void *joint_anim, void
 u32 (*CKindToId)(int id, int secondary) = (void *) 0x800325c8;
 void (*TOBJ_Setup)(TOBJ *tobj) = (void *) 0x80360950;
 void (*MOBJ_Setup)(MOBJ *mobj) = (void *) 0x80363a24;
+
+
+// tvo functions
 
 void Tvo_GetSoloPlayer(MatchInfoBlock *data) {
     u8 team_counts[4] = {0};
@@ -206,11 +207,6 @@ void Tvo_DataInit() {
 
 void Tvo_GetCharacter(CharacterKind last_played, CharacterKind *kind_out) {
 
-    // if (kind_out == (void *)0) {
-    //     OSReport("null kind\n");
-    //     return;
-    // }
-
     // exit early if desync/quit out
     if (!stc_tvo_characters->match_success && (int)last_played != -1) {
         // check if last played is valid
@@ -259,25 +255,23 @@ void Tvo_GetStage(u8 *stage_out) {
 }
 
 void Tvo_SetPlayerLevels() {
-	if(stc_tvo_characters->match_success) {
-		for (int i = 0; i < 4; i++) {
-			// dont run on solo player
-            if (i != stc_tvo_characters->solo_player) {
-                int stocks = Fighter_GetStocks(i);
-                if (stocks <= 0) {
-                    if (stc_tvo_characters->player_levels[i] > 0)
-                        stc_tvo_characters->player_levels[i]--;
-                }
-                else {
-                    if (stc_tvo_characters->player_levels[i] < TVO_MAX_LEVEL)
-                        stc_tvo_characters->player_levels[i]++;
-                }
+    for (int i = 0; i < 4; i++) {
+        // dont run on solo player
+        if (i != stc_tvo_characters->solo_player) {
+            int stocks = Fighter_GetStocks(i);
+            if (stocks <= 0) {
+                if (stc_tvo_characters->player_levels[i] > 0)
+                    stc_tvo_characters->player_levels[i]--;
             }
-            
-			OSReport("player %d level %d\n", i, stc_tvo_characters->player_levels[i]);
-            
-		}
-	}
+            else {
+                if (stc_tvo_characters->player_levels[i] < TVO_MAX_LEVEL)
+                    stc_tvo_characters->player_levels[i]++;
+            }
+        }
+        
+        OSReport("player %d level %d\n", i, stc_tvo_characters->player_levels[i]);
+        
+    }
 }
 
 void Tvo_LoadLevelHud() {

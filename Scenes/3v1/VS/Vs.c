@@ -7,13 +7,11 @@
 
 void minor_think() {
 	// 3v1
-	if (IsCustomMode()) {
-		if (*stc_frame_count == 0) {
-			// exit early if there is no solo player
-			if (stc_tvo_characters->solo_player == 255) {
-				Match_EndImmediate();
-				return;
-			}
+	if (*stc_frame_count == 0) {
+		// exit early if there is no solo player
+		if (stc_tvo_characters->solo_player == 255) {
+			Match_EndImmediate();
+			return;
 		}
 	}
 
@@ -42,24 +40,27 @@ void minor_exit(ScDataMatchExit* minor_data) {
 
 	// get our local player data
 	u8 local_slot = odb->local_player_idx;
-	CharacterKind ckind = stc_last_match->match_standings.ply_standings[local_slot].ckind;
-	u8 stocks = stc_last_match->match_standings.ply_standings[local_slot].stock_num;
+	u8 ckind = Fighter_GetExternalID(local_slot);
+	u8 stocks = Fighter_GetStocks(local_slot);
+	// u8 stocks = stc_last_match->match_standings.ply_standings[local_slot].stock_num;
 
 	// set our last played
 	stc_tvo_characters->last_played = ckind;
-	
-	// move onto the next characer if we ran out of stocks
-	if (stocks == 0) {
-		TVO_SET_PLAYED(stc_tvo_characters, ckind);
-	}
+	OSReport("last played: %d\n", ckind);
+	OSReport("stocks: %d\n", stocks);
 
-	// set our levels
-	Tvo_SetPlayerLevels();
+	if(stc_tvo_characters->match_success) {
+		// move onto the next characer if we ran out of stocks
+		if (stocks == 0) {
+			TVO_SET_PLAYED(stc_tvo_characters, ckind);
+		}
+
+		// set our levels
+		Tvo_SetPlayerLevels();
+	}
 
 	// original code
 	VS_Exit(minor_data);
-	// TVO_SET_PLAYED(stc_tvo_characters, 18);
-	// TVO_SET_PLAYED(stc_tvo_characters, 19);
 	return;
 }
 
