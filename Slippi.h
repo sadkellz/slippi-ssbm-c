@@ -1,7 +1,7 @@
 #ifndef SLIPPI_H
 #define SLIPPI_H
 
-#include "../MexTK/mex.h"
+#include "m-ex/MexTK/mex.h"
 
 #include <stdbool.h>
 
@@ -34,6 +34,7 @@
 #define R13_OFFSET_NAME_ENTRY_INDEX_FLAG -0x5035		// byte, set to 1 if just entered name entry. Rsts direct code index.
 #define R13_OFFSET_USE_PREMADE_TEXT -0x5014			// bool, used to make Text_CopyPremadeTextDataToStruct load text data from dolphin
 #define R13_OFFSET_ISWIDESCREEN -0x5020				// bool, used to make Text_CopyPremadeTextDataToStruct load text data from dolphin
+#define R13_OFFSET_LOCALPORT -0x5108			// byte, 1p port for CSS
 
 //###############################################################################
 // EXI COMMAND Definitions
@@ -82,6 +83,16 @@ typedef enum MatchmakingConnectionState {
     MM_STATE_CONNECTION_SUCCESS,
     MM_STATE_ERROR_ENCOUNTERED
 } MatchmakingConnectionState;
+
+//################################################################################
+//# Online Modes
+//################################################################################
+typedef enum SlippiOnlineMode {
+	ONLINE_MODE_RANKED = 0,
+	ONLINE_MODE_UNRANKED = 1,
+	ONLINE_MODE_DIRECT = 2,
+	ONLINE_MODE_TEAMS = 3,
+} SlippiOnlineMode;
 
 // ################################################################################
 // # Match State Response Buffer
@@ -238,5 +249,9 @@ bool isWidescreen(){
 	bool res = R13_INT(R13_OFFSET_ISWIDESCREEN);
 	return res;
 }
+
+MnSlChrIcon *Slippi_GetCSSIconData();
+u8 Slippi_GetCSSIconNum();
+u8 Slippi_GetTeamCostumeIndex(u8 team_idx, CharacterKind ckind);
 
 #endif SLIPPI_H
