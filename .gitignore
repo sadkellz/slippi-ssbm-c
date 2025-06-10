@@ -8,11 +8,3 @@ build/*
 # ignore output files
 *.d
 *.o
-Scenes/SlippiMajor/MinorSetup/CSS/CSS.c
-Scenes/SlippiMajor/MinorSetup/CSS/CSS.h
-Scenes/SlippiMajor/MinorSetup/SSS/SSS.c
-Scenes/SlippiMajor/MinorSetup/SSS/SSS.h
-Scenes/SlippiMajor/MinorSetup/Splash/Splash.c
-Scenes/SlippiMajor/MinorSetup/Splash/Splash.h
-Scenes/SlippiMajor/MinorSetup/VS/VS.c
-Scenes/SlippiMajor/MinorSetup/VS/VS.h
