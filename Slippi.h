@@ -1,6 +1,8 @@
 #ifndef SLIPPI_H
 #define SLIPPI_H
 
+#include <stdbool.h>
+
 #include "m-ex/MexTK/mex.h"
 
 #include <stdbool.h>
@@ -13,7 +15,6 @@
 #else
 #define packed(X) X
 #endif
-
 
 #ifndef ALIGNED
 #define ALIGNED(X) __attribute__((aligned(X)))
@@ -36,12 +37,12 @@
 #define R13_OFFSET_ISWIDESCREEN -0x5020				// bool, used to make Text_CopyPremadeTextDataToStruct load text data from dolphin
 #define R13_OFFSET_LOCALPORT -0x5108			// byte, 1p port for CSS
 
-//###############################################################################
-// EXI COMMAND Definitions
-//###############################################################################
-// For Slippi communication
-#define SLIPPI_CMD_GetFrame, 0x76
-#define SLIPPI_CMD_CheckForReplay  0x88
+// ###############################################################################
+//  EXI COMMAND Definitions
+// ###############################################################################
+//  For Slippi communication
+#define SLIPPI_CMD_GetFrame 0x76
+#define SLIPPI_CMD_CheckForReplay 0x88
 #define SLIPPI_CMD_CheckForStockSteal 0x89
 #define SLIPPI_CMD_SendOnlineFrame 0xB0
 #define SLIPPI_CMD_CaptureSavestate 0xB1
@@ -59,6 +60,8 @@
 #define SLIPPI_CMD_ReportMatch 0xBD
 #define SLIPPI_CMD_SendNameEntryIndex 0xBE
 #define SLIPPI_CMD_NameEntryAutoComplete 0xBF
+#define SLIPPI_CMD_GetRankInfo 0xE3
+#define SLIPPI_CMD_FetchRankInfo 0xE4
 // For Slippi file loads
 #define SLIPPI_CMD_FileLength 0xD1
 #define SLIPPI_CMD_FileLoad 0xD2
@@ -70,18 +73,16 @@
 #define SLIPPI_CMD_GetPremadeTextLength 0xE1
 #define SLIPPI_CMD_GetPremadeText 0xE2
 
-
-
-//################################################################################
-//# Matchmaking States
-//################################################################################
+// ################################################################################
+// # Matchmaking States
+// ################################################################################
 typedef enum MatchmakingConnectionState {
-    MM_STATE_IDLE,
-    MM_STATE_INITIALIZING,
-    MM_STATE_MATCHMAKING,
-    MM_STATE_OPPONENT_CONNECTING,
-    MM_STATE_CONNECTION_SUCCESS,
-    MM_STATE_ERROR_ENCOUNTERED
+  MM_STATE_IDLE,
+  MM_STATE_INITIALIZING,
+  MM_STATE_MATCHMAKING,
+  MM_STATE_OPPONENT_CONNECTING,
+  MM_STATE_CONNECTION_SUCCESS,
+  MM_STATE_ERROR_ENCOUNTERED
 } MatchmakingConnectionState;
 
 //################################################################################
@@ -101,34 +102,37 @@ typedef enum SlippiOnlineMode {
 #pragma pack(1)
 
 typedef struct MatchStateResponseBuffer {
-	u8 connectionState;             // Matchmaking State defined above
-	bool isLocalPlayerReady;
-	bool isRemotePlayerReady;
-	u8 localPlayerIndex;
-	u8 remotePlayerIndex;
-	void* rngOffset;
-	u8 delayFrames;
-	u8 userChatMsgId;
-	u8 oppChatMsgId;
-	u8 chatMsgPlayerIndex;
-	u32* VSLeftPlayers;
-	u32* VSRightPlayers;
-	char localName[31];
-	char p1Name[31];
-	char p2Name[31];
-	char p3Name[31];
-	char p4Name[31];
-	char oppName[31];
-	char p1ConnectCode[10];
-	char p2ConnectCode[10];
-	char p3ConnectCode[10];
-	char p4ConnectCode[10];
-	char p1UID[29];
-	char p2UID[29];
-	char p3UID[29];
-	char p4UID[29];
-	char errorMessage[241];
-	MatchInit gameInfoBlock;
+  u8 connectionState;  // Matchmaking State defined above
+  bool isLocalPlayerReady;
+  bool isRemotePlayerReady;
+  u8 localPlayerIndex;
+  u8 remotePlayerIndex;
+  void* rngOffset;
+  u8 delayFrames;
+  u8 userChatMsgId;
+  u8 oppChatMsgId;
+  u8 chatMsgPlayerIndex;
+  u8 localRank;
+  u8 oppRank;
+  u32* VSLeftPlayers;
+  u32* VSRightPlayers;
+  char localName[31];
+  char p1Name[31];
+  char p2Name[31];
+  char p3Name[31];
+  char p4Name[31];
+  char oppName[31];
+  char p1ConnectCode[10];
+  char p2ConnectCode[10];
+  char p3ConnectCode[10];
+  char p4ConnectCode[10];
+  char p1UID[29];
+  char p2UID[29];
+  char p3UID[29];
+  char p4UID[29];
+  char errorMessage[241];
+  MatchInit gameInfoBlock;
+  char matchmakeID[51];
 } MatchStateResponseBuffer;
 
 // ################################################################################
@@ -137,41 +141,45 @@ typedef struct MatchStateResponseBuffer {
 #define CSS_DATA_TABLE_BUFFER_ADDRESS 0x80005614
 
 typedef struct SlippiCSSDataTable {
-	MatchStateResponseBuffer* msrb;
-	void* SlpCSSDatAddress;
-	Text* textStructAddress;
-	u8 spinner1;
-	u8 spinner2;
-	u8 spinner3;
-	u16 frameCounter;
-	bool prevLockInState;
-	u8 prevConnectedState;
-	u8 zButtonHoldTimer;
-	bool chatWindowOpened;
-	u16 chatLastInput;
-	u8 chatMsgCount;
-	u8 chatLocalMsgCount;
-	u8 lastChatMsgIndex;
-	u8 teamIndex;
-	u8 teamCostumeIndex;
+  MatchStateResponseBuffer* msrb;
+  void* SlpCSSDatAddress;
+  Text* textStructAddress;
+  u8 spinner1;
+  u8 spinner2;
+  u8 spinner3;
+  u16 frameCounter;
+  bool prevLockInState;
+  u8 prevConnectedState;
+  u8 zButtonHoldTimer;
+  bool chatWindowOpened;
+  u16 chatLastInput;
+  u8 chatMsgCount;
+  u8 chatLocalMsgCount;
+  u8 lastChatMsgIndex;
+  u8 teamIndex;
+  u8 teamCostumeIndex;
 } SlippiCSSDataTable;
 
 #pragma pack()
 
 typedef struct SlippiCSSDataTableRef {
-	SlippiCSSDataTable* dt;
+  SlippiCSSDataTable* dt;
 } SlippiCSSDataTableRef;
 
-const SlippiCSSDataTableRef* SLIPPI_CSS_DATA_REF = (SlippiCSSDataTableRef*) CSS_DATA_TABLE_BUFFER_ADDRESS; 
+const SlippiCSSDataTableRef* SLIPPI_CSS_DATA_REF = (SlippiCSSDataTableRef*)CSS_DATA_TABLE_BUFFER_ADDRESS;
 
 /** DAT Descriptors **/
 typedef struct ChatWindowDesc {
-	JOBJDesc* jobj;
+  JOBJDesc* jobj;
 } ChatWindowDesc;
 
 typedef struct SlpCSSDesc {
-	ChatWindowDesc* chatWindow;
-	JOBJSet* chatMessage;
+  ChatWindowDesc* chatWindow;
+  JOBJSet* chatMessage;
+  MatAnimJointDesc* mode;  // This is not a desc but the struct is identical
+  JOBJ* connectHelp;
+  JOBJSet* rankIcons;
+  JOBJ* sheikSelector;
 } SlpCSSDesc;
 
 // Static Overloaded Text Functions, dont call these directly
@@ -180,74 +188,73 @@ int _internal_createSubtext(Text* text, GXColor* color, int textType, int outlin
 
 // These two functions actually both call the same function. When calling CreateSlippiPremadeText, textType MUST be 2
 Text* CreateSlippiPremadeText(int playerIndex, int messageId, int gx_pri, float x, float y, float z, float scale) {
-	_internal_createSlippiPremadeText(playerIndex, messageId, 2, gx_pri, x, y, z, scale);
+  _internal_createSlippiPremadeText(playerIndex, messageId, 2, gx_pri, x, y, z, scale);
 }
 int CreateSubtext(Text* text, GXColor* color, bool includeOutline, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize) {
-	if (includeOutline) {
-		_internal_createSubtext(text, color, 1, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
-	} else {
-		_internal_createSubtext(text, color, 0, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
-	}
+  if (includeOutline) {
+    _internal_createSubtext(text, color, 1, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
+  } else {
+    _internal_createSubtext(text, color, 0, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
+  }
 }
-
 
 /** Functions **/
 /**
  * Gets Slippi CSS Data Table
  * */
-SlippiCSSDataTable* GetSlpCSSDT(){
-	return SLIPPI_CSS_DATA_REF->dt;
+SlippiCSSDataTable* GetSlpCSSDT() {
+  return SLIPPI_CSS_DATA_REF->dt;
 }
 
 /**
  * Gets Match State Response Buffer
  * */
-MatchStateResponseBuffer* MSRB(){
-	return GetSlpCSSDT()->msrb;
+MatchStateResponseBuffer* MSRB() {
+  return GetSlpCSSDT()->msrb;
 }
 
 /**
  * Finds the number of remote players connected
  * TODO: do this smarter (make MSRB return remote player count from dolphin)
  * */
-int GetRemotePlayerCount(){
-    u8 i = 0;
-    if(strlen(MSRB()->p1Name) > 0 && strcmp(MSRB()->p1Name, MSRB()->localName) != 0) i++;
-    if(strlen(MSRB()->p2Name) > 0 && strcmp(MSRB()->p2Name, MSRB()->localName) != 0) i++;
-    if(strlen(MSRB()->p3Name) > 0 && strcmp(MSRB()->p3Name, MSRB()->localName) != 0) i++;
-    if(strlen(MSRB()->p4Name) > 0 && strcmp(MSRB()->p4Name, MSRB()->localName) != 0) i++;
-    return i;
-// 	return MSRB()->remotePlayerCount;
+int GetRemotePlayerCount() {
+  u8 i = 0;
+  if (strlen(MSRB()->p1Name) > 0 && strcmp(MSRB()->p1Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p2Name) > 0 && strcmp(MSRB()->p2Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p3Name) > 0 && strcmp(MSRB()->p3Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p4Name) > 0 && strcmp(MSRB()->p4Name, MSRB()->localName) != 0) i++;
+  return i;
+  // 	return MSRB()->remotePlayerCount;
 }
 
 /**
  * Checks if on Online CSS
  * */
 bool IsSlippiOnlineCSS() {
-    return stc_scene_info->minor_curr == MNRKIND_TITLE && stc_scene_info->major_curr == MJRKIND_HANYUTESTCSS;
+  return stc_scene_info->minor_curr == MNRKIND_TITLE && stc_scene_info->major_curr == MJRKIND_HANYUTESTCSS;
 }
 
 /**
  * Checks if on CSS Name Entry Screen
  */
 bool IsOnCSSNameEntryScreen() {
-    return ACCESS_U8(stc_css_exitkind);
+  return ACCESS_U8(stc_css_exitkind);
 }
 
 /**
  * Check if currently connected to an opponent
  * @return
  */
-bool isConnected(){
-    return MSRB()->connectionState == MM_STATE_CONNECTION_SUCCESS;
+bool isConnected() {
+  return MSRB()->connectionState == MM_STATE_CONNECTION_SUCCESS;
 }
 
 /**
  * Checks if game is on widescreen mode
  * */
-bool isWidescreen(){
-	bool res = R13_INT(R13_OFFSET_ISWIDESCREEN);
-	return res;
+bool isWidescreen() {
+  bool res = R13_INT(R13_OFFSET_ISWIDESCREEN);
+  return res;
 }
 
 MnSlChrIcon *Slippi_GetCSSIconData();
