@@ -7,7 +7,7 @@
 #include "../../ExiSlippi.h"
 
 #define SLP_MAJOR_ID 8
-#define KB_HASHTAG (char*) 0x81940000
+#define KB_HASHTAG (u32)0x81940000
 #define GAME_PREP_MAX_RESULT_COUNT 9
 #define LGL_LIMIT 45
 
@@ -54,7 +54,7 @@ u8 SinglesDetermineWinner(u8 winner_idx);
 //     .fn_compute_ranked_winner = SinglesDetermineWinner,
 // };
 
-static char **keyboard_data = (char**)0x803EDC1C;
+static u32 **keyboard_data = (u32**)0x803EDC1C;
 static u8 *slp_local_port = (u8*)0x8045ABF6; // correct name?
 static ScDataVS *stc_mode_data = (ScDataVS*)0x8045AC50; // array has a size of 12?
 static ScDataRst *stc_last_match = (ScDataRst*)0x80479d98;
@@ -69,57 +69,6 @@ static void (*VS_Exit)(void *minor_data) = (void *) 0x801b15c8;
 static int (*PlayerBlock_GetLedgeGrabs)(int slot) = (int *) 0x80040af0;
 static u16 (*PlayerBlock_GetPercent)(int slot) = (u16 *) 0x800342b4;
 
-// // CSS
-// void SlpCss_Prep(MinorScene *minor_data);
-// void SlpCss_Decide(MinorScene *minor_data);
-// void SlpCss_InitRanked();
-// void SlpCss_InitUnranked();
-// void SlpCss_InitDirect();
-// void SlpCss_LoadSss();
-// void SlpCss_LoadSplash();
-
-// // SSS
-// void SlpSss_Prep(MinorScene *minor_data);
-// void SlpSss_Decide(MinorScene *minor_data);
-
-// // Splash
-// #pragma pack(1)
-// typedef struct SplashScreenData {
-//     int scale_type; // 0-3 - affects the characters model scale
-//     int match_type; // aka target/trophy/allstar etc...
-//     u8 nametag;
-//     u8 text_disp; // 0x78 = char name, 0 = nametag
-//     u8 progress; // roadmap progress
-//     u8 ply_num_left;
-//     u8 ply_num_right;
-//     u8 left_chars[3];
-//     u8 right_chars[3];
-//     u8 left_colors[3];
-//     u8 right_colors[3];
-//     u8 x19[6];
-// } SplashScreenData;
-
-// #pragma pack()
-// typedef struct SplashLocalPlayerData {
-//     u8 ckind;
-//     u8 costume;
-//     u8 difficulty;
-//     u8 stocks;
-//     u8 text_disp;
-// } SplashLocalPlayerData;
-
-// static SplashScreenData *stc_splash_data = (SplashScreenData*)0x80490880;
-// static void* (*Splash_GetStaticData)(void) = (void *) 0x8017eb30;
-// static void (*Splash_UnkPreload)(int arg0) = (void *) 0x80018c2c;
-// static void (*Splash_UnkPreload2)(int arg0) = (void *) 0x80017700;
-
-// void SlpSplash_Prep(MinorScene *minor_data);
-// void SlpSplash_Decide(MinorScene *minor_data);
-// void SlpSplash_ColorOverwrite(MatchInit *match_data);
-
-// // VS
-// void SlpVs_Prep(MinorScene *minor_data);
-// void SlpVs_Decide(MinorScene *minor_data);
-
+u8 GetTeamCount(u8 team_idx, PlayerData *ply_data);
 
 #endif

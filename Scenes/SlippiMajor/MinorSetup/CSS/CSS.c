@@ -59,7 +59,7 @@ void SlpCss_InitRanked() {
 
 void SlpCss_InitDirect() {
     u8 is_winner = R13_U8(R13_OFFSET_ISWINNER);
-    
+
     // First match is random
     if (is_winner == 255) {
         Scene_SetNextMinor(SLP_SCENE_SPLASH);
@@ -79,7 +79,7 @@ void SlpCss_InitDirect() {
         }
     }
     else {
-        while (true); // shouldnt be possible, stall
+        assert("Invalid is_winner value."); // shouldnt be possible, crash
     }
 }
 

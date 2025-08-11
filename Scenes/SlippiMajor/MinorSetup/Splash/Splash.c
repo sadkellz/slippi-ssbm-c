@@ -25,43 +25,58 @@ void SlpSplash_Prep(MinorScene *minor_data) {
     MatchInit *match_block = (MatchInit*)msrb->game_info_block;
     memcpy(&sss_data->match_init, match_block, 0x138);
 
-    // bp();
     // setup splash screen
     if (online_mode == ONLINE_MODE_TEAMS) {
+        u8 local_team = sss_data->match_init.playerData[msrb->local_player_idx].team;
+        PlayerData *player_data = sss_data->match_init.playerData;
         SlpSplash_ColorOverwrite(&sss_data->match_init);
         splash_data.scale_type = 1; // teams, will make the announcer say teams?
 
-        // setup teams
-        u8 local_team = sss_data->match_init.playerData[msrb->local_player_idx].team;
-        OSReport("local team: %d\n", local_team);
+        // get team counts and amount of teams
+        int team_counts[4] = {0};
+        int unique_teams = 0;
         for (int i = 0; i < 4; i++) {
-            PlayerData current_player = sss_data->match_init.playerData[i];
-
-            // if this player is on our team, add them to the left
-            if (current_player.team == local_team) {
-                splash_data.left_chars[splash_data.ply_num_left] = current_player.c_kind;
-                splash_data.left_colors[splash_data.ply_num_left] = current_player.costume;
-                splash_data.ply_num_left++;
-                OSReport("char id: %d\n", current_player.c_kind);
-            }
-            else {
-                splash_data.right_chars[splash_data.ply_num_right] = current_player.c_kind;
-                splash_data.right_colors[splash_data.ply_num_right] = current_player.costume;
-                splash_data.ply_num_right++;
+            team_counts[sss_data->match_init.playerData[i].team]++;
+        }
+        for (int i = 0; i < 4; i++) {
+            if (team_counts[i] > 0)
+                unique_teams++;
+        }
+        
+        // setup teams
+        if (unique_teams == 2) { // 2v2 or 3v1
+            for (int i = 0; i < 4; i++) {
+                PlayerData current_player = sss_data->match_init.playerData[i];
+                // if this player is on our team, add them to the left
+                if (current_player.team == local_team) {
+                    splash_data.left_chars[splash_data.ply_num_left] = current_player.c_kind;
+                    splash_data.left_colors[splash_data.ply_num_left] = Slippi_GetTeamCostumeIndex(local_team + 1, current_player.c_kind);
+                    splash_data.ply_num_left++;
+                }
+                else {
+                    splash_data.right_chars[splash_data.ply_num_right] = current_player.c_kind;
+                    splash_data.right_colors[splash_data.ply_num_right] = Slippi_GetTeamCostumeIndex(current_player.team + 1, current_player.c_kind);
+                    splash_data.ply_num_right++;
+                }
             }
         }
-        OSReport("Ply num left: %d, Ply num right: %d\n", splash_data.ply_num_left, splash_data.ply_num_right);
+        // else if (unique_teams > 2) {
+        //     for (int i = 0; i < 4; i++) {
+        //         PlayerData current_player = sss_data->match_init.playerData[i];
+
+        //         if ()
+        //     }
+        // }
+
 
     }
     else {
         splash_data.ply_num_left = 1;
         splash_data.ply_num_right = 1;
-        splash_data.left_chars[0] = sss_data->match_init.playerData[0].c_kind;
-        splash_data.left_colors[0] = sss_data->match_init.playerData[0].costume;
-        splash_data.right_chars[0] = sss_data->match_init.playerData[1].c_kind;
-        splash_data.right_colors[0] = sss_data->match_init.playerData[1].costume;
-        OSReport("char id: %d\n", sss_data->match_init.playerData[0].c_kind);
-        OSReport("char id2: %d\n", sss_data->match_init.playerData[1].c_kind);
+        splash_data.left_chars[0] = sss_data->match_init.playerData[msrb->local_player_idx].c_kind;
+        splash_data.left_colors[0] = sss_data->match_init.playerData[msrb->local_player_idx].costume;
+        splash_data.right_chars[0] = sss_data->match_init.playerData[msrb->remote_player_idx].c_kind;
+        splash_data.right_colors[0] = sss_data->match_init.playerData[msrb->remote_player_idx].costume;
     }
 
     *stc_splash_data = splash_data;

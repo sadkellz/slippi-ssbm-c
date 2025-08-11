@@ -95,7 +95,7 @@ void major_load(){
 	OSReport("Slippi.major_load!\n");
 
     // Initialize hashtag letter
-    *keyboard_data = KB_HASHTAG;
+    (*keyboard_data[2]) = KB_HASHTAG;
 
     // Initialize some variables
     R13_U8(R13_OFFSET_NAME_ENTRY_MODE) = 0;
@@ -205,6 +205,15 @@ u8 SinglesDetermineWinner(u8 winner_idx) {
         // same frame double ko
     }
     return -1;
+}
+
+u8 GetTeamCount(u8 team_idx, PlayerData *ply_data) {
+    u8 count;
+
+    for (int i = 0; i < 4; i++) {
+        if (ply_data[i].team == team_idx) { count++; }
+    }
+    return count;
 }
 
 #endif
